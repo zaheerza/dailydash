@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Your Page</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink: #0a0a0a;
+    --paper: #ffffff;
+    --mid: #555555;
+    --faint: #999999;
+    --border: #e0e0e0;
+    --border-strong: #0a0a0a;
+    --card-bg: #0a0a0a;
+    --card-fg: #ffffff;
+    --card-mid: rgba(255,255,255,0.55);
+    --card-faint: rgba(255,255,255,0.25);
+    --card-border: rgba(255,255,255,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; color-scheme: light; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* HEADER */
+  .masthead {
+    border-bottom: 1.5px solid var(--border-strong);
+    padding: 32px 40px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .masthead-left { display: flex; flex-direction: column; gap: 6px; }
+
+  .date-line {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .site-title {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .site-title span {
+    font-weight: 300;
+    color: var(--mid);
+  }
+
+  .masthead-right {
+    text-align: right;
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: 0.04em;
+    line-height: 1.9;
+    font-weight: 400;
+  }
+
+  /* LAYOUT */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+  }
+
+  .col-main { border-right: 1px solid var(--border); padding-right: 48px; }
+  .col-side { padding-left: 40px; }
+
+  /* SECTIONS */
+  .section {
+    padding: 36px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* QUOTE */
+  .quote-block {
+    padding: 28px 0 24px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .quote-text {
+    font-size: 21px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .quote-source {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  /* DIGEST */
+  .digest-intro {
+    font-size: 13px;
+    color: var(--faint);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 300;
+  }
+
+  .news-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+
+  .news-source {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 7px;
+  }
+
+  .news-headline {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 7px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .news-summary {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--mid);
+    font-weight: 300;
+  }
+
+  /* LEARN */
+  .learn-card {
+    background: var(--card-bg);
+    color: var(--card-fg);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .learn-card::before { display: none; }
+
+  .learn-day {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--card-mid);
+    margin-bottom: 14px;
+  }
+
+  .learn-topic {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    line-height: 1.25;
+    color: var(--card-fg);
+    letter-spacing: -0.02em;
+  }
+
+  .learn-body {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--card-mid);
+    font-weight: 300;
+  }
+
+  .learn-body p { margin-bottom: 10px; }
+  .learn-body p:last-child { margin-bottom: 0; }
+
+  .learn-tag {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--card-fg);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .learn-tag:hover { border-color: rgba(255,255,255,0.7); }
+
+  /* SIDEBAR */
+  .sidebar-section {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-section:last-child { border-bottom: none; }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 18px;
+  }
+
+  /* PULSE */
+  .pulse-item {
+    display: flex;
+    gap: 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.5;
+    cursor: default;
+  }
+
+  .pulse-item:last-child { border-bottom: none; }
+
+  .pulse-region {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    min-width: 52px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .pulse-text { color: var(--ink); font-weight: 300; }
+
+  /* RABBIT HOLE */
+  .rabbit-hole {
+    background: var(--ink);
+    color: var(--card-fg);
+    padding: 22px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .rabbit-hole:hover { opacity: 0.85; }
+
+  .rh-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--card-faint);
+    margin-bottom: 10px;
+  }
+
+  .rh-text {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.01em;
+  }
+
+  .rh-cta {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--card-mid);
+    font-weight: 400;
+  }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--faint);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 20px 0;
+    font-weight: 400;
+  }
+
+  .loading-dots { display: flex; gap: 4px; }
+
+  .loading-dots span {
+    width: 4px; height: 4px;
+    background: var(--mid);
+    border-radius: 50%;
+    animation: pulse 1.2s infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* SETUP */
+  .setup-box {
+    background: var(--ink);
+    color: var(--card-fg);
+    padding: 32px;
+    margin: 32px 0;
+  }
+
+  .setup-box h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .setup-box p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--card-mid);
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  .setup-input {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    padding: 10px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .setup-input:focus { border-color: rgba(255,255,255,0.5); }
+
+  .btn {
+    background: #fff;
+    color: var(--ink);
+    border: none;
+    padding: 10px 22px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover { opacity: 0.8; }
+
+  /* REFRESH */
+  .refresh-bar {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px 0 0;
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+  }
+
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border-strong);
+    color: var(--ink);
+    padding: 8px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .refresh-btn:hover { background: var(--ink); color: var(--paper); }
+
+  /* INTERESTS */
+  .interests-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .interest-tag {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    color: var(--faint);
+    background: var(--paper);
+  }
+
+  .interest-tag.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .error-msg {
+    color: var(--mid);
+    font-size: 12px;
+    padding: 8px 0;
+    font-weight: 400;
+  }
+
+  /* QUIZ */
+  .quiz-card {
+    margin-top: 16px;
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+  }
+
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .quiz-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--card-mid);
+  }
+
+  .quiz-topic-ref {
+    font-size: 10px;
+    color: var(--card-faint);
+    letter-spacing: 0.04em;
+  }
+
+  .quiz-body { padding: 20px 24px 24px; }
+
+  .quiz-question {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.55;
+    color: var(--card-fg);
+    margin-bottom: 18px;
+    letter-spacing: -0.01em;
+  }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+
+  .quiz-option {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--card-border);
+    color: var(--card-mid);
+    padding: 11px 14px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.4;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .quiz-option:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); }
+
+  .quiz-option.correct {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.6);
+    color: var(--card-fg);
+  }
+
+  .quiz-option.wrong {
+    background: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.08);
+    color: var(--card-faint);
+  }
+
+  .quiz-option.reveal-correct {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .option-letter {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--card-faint);
+    min-width: 16px;
+    padding-top: 1px;
+    letter-spacing: 0.05em;
+  }
+
+  .quiz-explanation {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.04);
+    border-left: 2px solid rgba(255,255,255,0.3);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--card-mid);
+    font-weight: 300;
+    display: none;
+  }
+
+  .quiz-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+    align-items: center;
+  }
+
+  .quiz-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    border: none;
+  }
+
+  .quiz-btn-skip {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--card-faint);
+  }
+
+  .quiz-btn-skip:hover { border-color: rgba(255,255,255,0.3); }
+
+  .quiz-btn-next {
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .quiz-btn-next:hover { opacity: 0.85; }
+
+  .quiz-score {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--card-faint);
+    letter-spacing: 0.06em;
+    margin-left: auto;
+  }
+
+  .quiz-loading {
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--card-faint);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    font-weight: 400;
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <div class="date-line" id="dateLine"></div>
+    <div class="site-title">Your <span>Morning</span> Brief</div>
+  </div>
+  <div class="masthead-right" id="streakInfo">
+    Loading your profile...
+  </div>
+</header>
+
+<div class="page" id="mainPage">
+  <!-- SETUP STATE shown first if no API key -->
+  <div class="col-main" id="mainCol">
+    <div id="setupSection" style="display:none">
+      <div class="setup-box">
+        <h3>One-time setup</h3>
+        <p>This page uses the Claude API to generate your personalised content. Enter your Anthropic API key below; it is stored only in your browser and never sent anywhere except api.anthropic.com.</p>
+        <p>Get a key at console.anthropic.com, then paste it here:</p>
+        <input type="password" class="setup-input" id="apiKeyInput" placeholder="sk-ant-...">
+        <br>
+        <button class="btn" onclick="saveKey()">Save &amp; Load</button>
+        <div class="error-msg" id="keyError"></div>
+      </div>
+    </div>
+
+    <div id="contentSection" style="display:none">
+      <!-- Quote -->
+      <div class="section">
+        <div class="section-label">Opening</div>
+        <div id="quoteArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> composing your opening...</div></div>
+      </div>
+
+      <!-- News digest -->
+      <div class="section">
+        <div class="section-label">News Digest</div>
+        <div id="digestArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> gathering the world...</div></div>
+      </div>
+
+      <!-- Learn -->
+      <div class="section">
+        <div class="section-label">Today's Learning</div>
+        <div id="learnArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> building on yesterday...</div></div>
+        <div id="quizArea" style="display:none"></div>
+      </div>
+
+      <div class="refresh-bar">
+        <button class="refresh-btn" onclick="refreshAll()">Refresh All</button>
+        <button class="refresh-btn" onclick="clearAndReset()">Reset Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-side" id="sideCol">
+    <div id="sideSetup" style="display:none">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Your Interests</div>
+        <p style="font-size:12px;color:var(--subtle);line-height:1.7;">Set up your API key first, then your interests will appear here.</p>
+      </div>
+    </div>
+    <div id="sideContent" style="display:none">
+      <!-- Pulse -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">World at a Glance</div>
+        <div id="pulseArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Interests -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Your Tilts</div>
+        <p style="font-size:11px;color:var(--subtle);line-height:1.6;margin-bottom:12px;">Click to weight what matters most. The page learns from these over time.</p>
+        <div class="interests-bar" id="interestTags"></div>
+      </div>
+
+      <!-- Rabbit Hole -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Today's Rabbit Hole</div>
+        <div id="rabbitArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const INTERESTS_DEFAULT = [
+  'geopolitics', 'science', 'history', 'philosophy',
+  'technology', 'economics', 'literature', 'environment'
+];
+
+function getState() {
+  return JSON.parse(localStorage.getItem('mypage_state') || JSON.stringify({
+    apiKey: '',
+    interests: INTERESTS_DEFAULT,
+    activeInterests: ['geopolitics', 'science', 'history'],
+    learnHistory: [],
+    visitCount: 0,
+    lastVisit: null
+  }));
+}
+
+function saveState(s) {
+  localStorage.setItem('mypage_state', JSON.stringify(s));
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Date
+  const now = new Date();
+  document.getElementById('dateLine').textContent =
+    now.toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const state = getState();
+  state.visitCount = (state.visitCount || 0) + 1;
+  state.lastVisit = now.toISOString();
+  saveState(state);
+
+  updateStreak(state);
+
+  if (!state.apiKey) {
+    document.getElementById('setupSection').style.display = 'block';
+    document.getElementById('sideSetup').style.display = 'block';
+  } else {
+    showContent(state);
+  }
+});
+
+function updateStreak(state) {
+  document.getElementById('streakInfo').innerHTML =
+    `Visit #${state.visitCount}<br>Interests: ${state.activeInterests.join(', ')}<br>Learning streak: ${state.learnHistory.length} topics`;
+}
+
+// ─── SETUP ────────────────────────────────────────────────────────────────────
+function saveKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    document.getElementById('keyError').textContent = 'Key should start with sk-ant-';
+    return;
+  }
+  const state = getState();
+  state.apiKey = key;
+  saveState(state);
+  document.getElementById('setupSection').style.display = 'none';
+  document.getElementById('sideSetup').style.display = 'none';
+  showContent(state);
+}
+
+// ─── SHOW CONTENT ─────────────────────────────────────────────────────────────
+function showContent(state) {
+  document.getElementById('contentSection').style.display = 'block';
+  document.getElementById('sideContent').style.display = 'block';
+  renderInterestTags(state);
+  loadAll(state);
+}
+
+// ─── INTERESTS ────────────────────────────────────────────────────────────────
+function renderInterestTags(state) {
+  const bar = document.getElementById('interestTags');
+  bar.innerHTML = '';
+  state.interests.forEach(tag => {
+    const el = document.createElement('div');
+    el.className = 'interest-tag' + (state.activeInterests.includes(tag) ? ' active' : '');
+    el.textContent = tag;
+    el.onclick = () => toggleInterest(tag);
+    bar.appendChild(el);
+  });
+}
+
+function toggleInterest(tag) {
+  const state = getState();
+  if (state.activeInterests.includes(tag)) {
+    if (state.activeInterests.length > 1) {
+      state.activeInterests = state.activeInterests.filter(t => t !== tag);
+    }
+  } else {
+    state.activeInterests.push(tag);
+  }
+  saveState(state);
+  renderInterestTags(state);
+}
+
+// ─── API CALL ─────────────────────────────────────────────────────────────────
+async function claude(prompt, systemPrompt) {
+  const state = getState();
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt || 'You are a concise, erudite assistant. Respond only with the requested content, no preamble.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+// ─── LOAD ALL ─────────────────────────────────────────────────────────────────
+function loadAll(state) {
+  loadQuote(state);
+  loadDigest(state);
+  loadLearn(state);
+  loadPulse(state);
+  loadRabbitHole(state);
+}
+
+// ─── QUOTE ────────────────────────────────────────────────────────────────────
+async function loadQuote(state) {
+  const el = document.getElementById('quoteArea');
+  try {
+    const interests = state.activeInterests.join(', ');
+    const text = await claude(
+      `Generate one opening for the day. Rotate across these types: a line or two from a poem (not Rumi — be unexpected), a Quranic verse with brief context, or a sharp non-insipid quote from a thinker, writer, or historical figure. The user's interests are: ${interests}. Today's date: ${new Date().toDateString()}.
+
+Return JSON only: {"type":"poem|quran|quote","text":"...","source":"...","context":"one sentence of context"}`,
+      'Return only valid JSON, no markdown fences.'
+    );
+    const q = JSON.parse(text);
+    el.innerHTML = `
+      <div class="quote-block">
+        <div class="quote-text">${q.text}</div>
+        <div class="quote-source">${q.source} ${q.context ? '· ' + q.context : ''}</div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load opening: ${e.message}</div>`;
+  }
+}
+
+// ─── DIGEST ───────────────────────────────────────────────────────────────────
+async function loadDigest(state) {
+  const el = document.getElementById('digestArea');
+  try {
+    const interests = state.activeInterests.join(', ');
+    const today = new Date().toDateString();
+    const text = await claude(
+      `Today is ${today}. The user's interests are: ${interests}. They read The Guardian UK, CBC, and IOL South Africa.
+
+Generate 4 news digest items that are genuinely important or intellectually interesting right now — not sensational, not trivial. Mix global and local to South Africa/Africa. For each: write a sharp headline and a 2-sentence summary that gives real context, not just "X happened." Make the summaries feel like a well-read friend telling you what matters and why.
+
+Return JSON array only: [{"source":"Guardian|CBC|IOL|Reuters|etc","headline":"...","summary":"...","why":"one sentence on why this matters"}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const items = JSON.parse(text);
+    el.innerHTML = `
+      <div class="digest-intro">Four things worth your attention today, filtered for what you actually care about.</div>
+      ${items.map(i => `
+        <div class="news-item">
+          <div class="news-source">${i.source}</div>
+          <div class="news-headline">${i.headline}</div>
+          <div class="news-summary">${i.summary} <em>${i.why}</em></div>
+        </div>`).join('')}`;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load digest: ${e.message}</div>`;
+  }
+}
+
+// ─── LEARN ────────────────────────────────────────────────────────────────────
+async function loadLearn(state) {
+  const el = document.getElementById('learnArea');
+  try {
+    const history = state.learnHistory.slice(-5);
+    const interests = state.activeInterests.join(', ');
+    const historyStr = history.length
+      ? `Previous topics: ${history.map(h => h.topic || h).join(', ')}. Build on one of these or open a related new thread.`
+      : `No previous topics. Start something foundational in one of: ${interests}.`;
+
+    const text = await claude(
+      `You are building a daily learning scaffold for someone interested in: ${interests}. ${historyStr}
+
+Today, teach something genuinely interesting: a concept, historical event, scientific idea, philosophical tension, or cultural thread. Keep it under 200 words but make it feel complete. End with one question to sit with, or one thing to notice in the world today that connects to this.
+
+Return JSON only: {"topic":"short title","day":"Day 1|Continuing from X|etc","body":"...","tag":"the field this belongs to"}`,
+      'Return only valid JSON, no markdown fences.'
+    );
+    const l = JSON.parse(text);
+
+    // Save to history — store topic + body snippet for quiz use
+    const newState = getState();
+    const entry = { topic: l.topic, tag: l.tag, body: l.body.slice(0, 400) };
+    newState.learnHistory = [...(newState.learnHistory || []).map(h => typeof h === 'string' ? { topic: h, tag: '', body: '' } : h), entry].slice(-30);
+    saveState(newState);
+    updateStreak(newState);
+
+    el.innerHTML = `
+      <div class="learn-card">
+        <div class="learn-day">${l.day}</div>
+        <div class="learn-topic">${l.topic}</div>
+        <div class="learn-body">${l.body.split('\n').map(p => p ? `<p>${p}</p>` : '').join('')}</div>
+        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+          <div class="learn-tag" onclick="deepenLearn('${l.topic.replace(/'/g,"\\'")}', '${l.tag}')">${l.tag} — go deeper</div>
+        </div>
+      </div>`;
+
+    // Load quiz after lesson renders, but only if there's prior history to quiz on
+    const quizHistory = newState.learnHistory.slice(0, -1); // exclude today's
+    if (quizHistory.length >= 1) {
+      loadQuiz(quizHistory);
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load learning: ${e.message}</div>`;
+  }
+}
+
+async function deepenLearn(topic, tag) {
+  const el = document.getElementById('learnArea');
+  const existing = el.innerHTML;
+  el.innerHTML += `<div class="loading" style="margin-top:20px"><div class="loading-dots"><span></span><span></span><span></span></div> going deeper on ${topic}...</div>`;
+  try {
+    const text = await claude(
+      `Expand on the topic "${topic}" in 150 words. Go one level deeper than an introduction: add a surprising angle, a historical figure's perspective, or a counterintuitive finding. End with one further question.`,
+    );
+    el.innerHTML = existing + `<div class="section" style="padding-top:20px"><div class="news-summary" style="font-size:14px;line-height:1.8;">${text}</div></div>`;
+  } catch(e) {
+    el.innerHTML = existing;
+  }
+}
+
+// ─── QUIZ ENGINE ──────────────────────────────────────────────────────────────
+let quizState = { questions: [], current: 0, score: 0, answered: 0 };
+
+async function loadQuiz(history) {
+  const qEl = document.getElementById('quizArea');
+  qEl.style.display = 'block';
+  qEl.innerHTML = `
+    <div class="learn-card" style="margin-top:16px;">
+      <div class="quiz-loading">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        generating a question from your history...
+      </div>
+    </div>`;
+
+  try {
+    // Pick up to 3 past topics to draw from
+    const pool = history.slice(-8);
+    const topicsForPrompt = pool.map(h => `"${h.topic}"${h.body ? ': ' + h.body.slice(0, 120) : ''}`).join('\n');
+
+    const text = await claude(
+      `Based on these topics the user has previously studied:
+${topicsForPrompt}
+
+Generate 3 multiple-choice quiz questions that test genuine understanding, not just recall. 
+- Questions should be specific and non-trivial — avoid "what is X" type questions
+- Prefer questions that require applying or connecting knowledge
+- Each question must have exactly 4 options (A, B, C, D), one correct
+- Include a brief explanation (2 sentences) for why the correct answer is right
+
+Return JSON array only:
+[{
+  "topic": "which topic this tests",
+  "question": "...",
+  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
+  "correct": 0,
+  "explanation": "..."
+}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+
+    const questions = JSON.parse(text);
+    quizState = { questions, current: 0, score: 0, answered: 0 };
+    renderQuizQuestion();
+  } catch(e) {
+    qEl.style.display = 'none';
+  }
+}
+
+function renderQuizQuestion() {
+  const qEl = document.getElementById('quizArea');
+  const { questions, current, score, answered } = quizState;
+
+  if (current >= questions.length) {
+    // All done
+    const pct = answered > 0 ? Math.round((score / answered) * 100) : 0;
+    qEl.innerHTML = `
+      <div class="learn-card" style="margin-top:16px;">
+        <div class="quiz-header">
+          <div class="quiz-label">Recall Check — Complete</div>
+        </div>
+        <div class="quiz-body">
+          <div class="quiz-question" style="font-style:normal;font-size:15px;">
+            ${answered === 0 ? 'Questions skipped — come back tomorrow.' :
+              `${score} of ${answered} correct (${pct}%) — ${pct >= 80 ? 'Solid retention.' : pct >= 50 ? 'Getting there.' : 'Worth revisiting these topics.'}`}
+          </div>
+        </div>
+      </div>`;
+
+    // Save score to state
+    const state = getState();
+    state.quizScores = [...(state.quizScores || []), { date: new Date().toDateString(), score, answered }].slice(-30);
+    saveState(state);
+    return;
+  }
+
+  const q = questions[current];
+  const letters = ['A', 'B', 'C', 'D'];
+
+  qEl.innerHTML = `
+    <div class="learn-card" style="margin-top:16px;">
+      <div class="quiz-header">
+        <div class="quiz-label">Recall Check · ${current + 1} of ${questions.length}</div>
+        <div class="quiz-topic-ref">${q.topic}</div>
+      </div>
+      <div class="quiz-body">
+        <div class="quiz-question">${q.question}</div>
+        <div class="quiz-options" id="quizOptions">
+          ${q.options.map((opt, i) => `
+            <button class="quiz-option" onclick="answerQuiz(${i})">
+              <span class="option-letter">${letters[i]}.</span>
+              <span>${opt.replace(/^[A-D]\.\s*/,'')}</span>
+            </button>`).join('')}
+        </div>
+        <div class="quiz-explanation" id="quizExplanation">${q.explanation}</div>
+        <div class="quiz-footer">
+          <button class="quiz-btn quiz-btn-skip" onclick="skipQuiz()">Skip question</button>
+          <div class="quiz-score" id="quizScore">${quizState.answered > 0 ? `${quizState.score}/${quizState.answered}` : ''}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function answerQuiz(chosenIndex) {
+  const q = quizState.questions[quizState.current];
+  const correct = q.correct;
+  const isCorrect = chosenIndex === correct;
+
+  if (isCorrect) quizState.score++;
+  quizState.answered++;
+
+  // Style options
+  const options = document.querySelectorAll('.quiz-option');
+  options.forEach((btn, i) => {
+    btn.onclick = null; // disable further clicks
+    if (i === correct) btn.classList.add('correct');
+    else if (i === chosenIndex && !isCorrect) btn.classList.add('wrong');
+    else if (i !== chosenIndex) btn.classList.add('reveal-correct');
+  });
+
+  // Show explanation
+  const expEl = document.getElementById('quizExplanation');
+  if (expEl) expEl.style.display = 'block';
+
+  // Update footer: replace skip with Next
+  const footer = document.querySelector('.quiz-footer');
+  if (footer) {
+    footer.innerHTML = `
+      <button class="quiz-btn quiz-btn-next" onclick="nextQuiz()">
+        ${quizState.current + 1 < quizState.questions.length ? 'Next question →' : 'Finish'}
+      </button>
+      <div class="quiz-score">${quizState.score}/${quizState.answered}</div>`;
+  }
+}
+
+function skipQuiz() {
+  quizState.current++;
+  renderQuizQuestion();
+}
+
+function nextQuiz() {
+  quizState.current++;
+  renderQuizQuestion();
+}
+
+// ─── PULSE ────────────────────────────────────────────────────────────────────
+async function loadPulse(state) {
+  const el = document.getElementById('pulseArea');
+  try {
+    const text = await claude(
+      `Today is ${new Date().toDateString()}. Give 6 one-line world situation updates — like a seasoned foreign correspondent's quick mental map: one per region (Africa, Middle East, Europe, Asia, Americas, Global/Climate). Each is a single crisp sentence: what's the current significant tension or development. Not news headlines — situational awareness.
+
+Return JSON array only: [{"region":"Africa|Middle East|Europe|Asia|Americas|Global","text":"..."}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const items = JSON.parse(text);
+    el.innerHTML = items.map(i => `
+      <div class="pulse-item">
+        <div class="pulse-region">${i.region}</div>
+        <div class="pulse-text">${i.text}</div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── RABBIT HOLE ─────────────────────────────────────────────────────────────
+async function loadRabbitHole(state) {
+  const el = document.getElementById('rabbitArea');
+  try {
+    const interests = state.activeInterests.join(', ');
+    const text = await claude(
+      `Suggest one genuinely fascinating thing to explore today — a YouTube video type, a Wikipedia article, a documentary, a podcast episode concept, or a short essay — related to the user's interests: ${interests}. Make it specific and compelling. Not generic.
+
+Return JSON: {"title":"...","type":"Wikipedia|YouTube|Documentary|Essay|Podcast","hook":"one irresistible sentence about why this is worth 10 minutes","searchQuery":"what to type into Google/YouTube"}`,
+      'Return only valid JSON, no markdown fences.'
+    );
+    const r = JSON.parse(text);
+    el.innerHTML = `
+      <div class="rabbit-hole" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(r.searchQuery)}','_blank')">
+        <div class="rh-label">${r.type}</div>
+        <div class="rh-text">${r.title}</div>
+        <div class="rh-cta" style="margin-top:8px;font-size:12px;">${r.hook}</div>
+        <div class="rh-cta">Click to search →</div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── REFRESH / RESET ──────────────────────────────────────────────────────────
+function refreshAll() {
+  const state = getState();
+  ['quoteArea','digestArea','learnArea','pulseArea','rabbitArea'].forEach(id => {
+    document.getElementById(id).innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  });
+  const qEl = document.getElementById('quizArea');
+  if (qEl) { qEl.style.display = 'none'; qEl.innerHTML = ''; }
+  quizState = { questions: [], current: 0, score: 0, answered: 0 };
+  loadAll(state);
+}
+
+function clearAndReset() {
+  if (confirm('Reset all preferences and learning history? Your API key will be kept.')) {
+    const state = getState();
+    const key = state.apiKey;
+    localStorage.removeItem('mypage_state');
+    const fresh = getState();
+    fresh.apiKey = key;
+    saveState(fresh);
+    location.reload();
+  }
+}
+</script>
+
+</body>
+</html>
