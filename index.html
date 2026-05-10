@@ -457,6 +457,56 @@
     font-weight: 400;
   }
 
+  /* MARKETS */
+  .market-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .market-item:last-child { border-bottom: none; }
+
+  .market-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .market-right { text-align: right; }
+
+  .market-price {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .market-chg {
+    font-size: 10px;
+    font-weight: 400;
+    margin-left: 6px;
+  }
+
+  .market-chg.up { color: #2a7a2a; }
+  .market-chg.down { color: #b53030; }
+
+  .market-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 6px 0;
+  }
+
+  .market-ts {
+    font-size: 9px;
+    color: var(--faint);
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+  }
+
   /* QUIZ */
   .quiz-card {
     margin-top: 16px;
@@ -717,6 +767,12 @@
       </div>
     </div>
     <div id="sideContent" style="display:none">
+      <!-- Markets -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Markets</div>
+        <div id="marketsArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
       <!-- Pulse -->
       <div class="sidebar-section">
         <div class="sidebar-label">World at a Glance</div>
@@ -909,8 +965,68 @@ async function claude(prompt, systemPrompt) {
   return data.content[0].text;
 }
 
+// ─── MARKETS ──────────────────────────────────────────────────────────────────
+const MARKET_SYMBOLS = [
+  { sym: '^GSPC',    label: 'S&P 500',  group: 'index' },
+  { sym: '^GSPTSE',  label: 'TSX',      group: 'index' },
+  { sym: '^FTSE',    label: 'FTSE 100', group: 'index' },
+  { sym: '^J203.JO', label: 'JSE',      group: 'index' },
+  { sym: 'USDCAD=X', label: 'USD/CAD',  group: 'fx' },
+  { sym: 'USDZAR=X', label: 'USD/ZAR',  group: 'fx' },
+  { sym: 'GC=F',     label: 'Gold',     group: 'commodity' },
+  { sym: 'SI=F',     label: 'Silver',   group: 'commodity' },
+  { sym: 'PL=F',     label: 'Platinum', group: 'commodity' },
+  { sym: 'CL=F',     label: 'WTI Oil',  group: 'commodity' },
+  { sym: 'HG=F',     label: 'Copper',   group: 'commodity' },
+];
+
+async function loadMarkets() {
+  const el = document.getElementById('marketsArea');
+  try {
+    const syms = MARKET_SYMBOLS.map(s => s.sym).join(',');
+    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}`;
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`);
+    const d = await r.json();
+    const quotes = JSON.parse(d.contents).quoteResponse.result;
+    const qMap = {};
+    quotes.forEach(q => qMap[q.symbol] = q);
+
+    let lastGroup = null;
+    let html = '';
+    MARKET_SYMBOLS.forEach(s => {
+      const q = qMap[s.sym];
+      if (!q) return;
+      if (lastGroup && s.group !== lastGroup) html += '<hr class="market-divider">';
+      lastGroup = s.group;
+
+      const price = q.regularMarketPrice;
+      const chg = q.regularMarketChangePercent ?? 0;
+      const up = chg >= 0;
+      const priceStr = s.group === 'fx'
+        ? price.toFixed(4)
+        : price >= 1000 ? price.toLocaleString('en', { maximumFractionDigits: 0 }) : price.toFixed(2);
+
+      html += `
+        <div class="market-item">
+          <div class="market-label">${s.label}</div>
+          <div class="market-right">
+            <span class="market-price">${priceStr}</span>
+            <span class="market-chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%</span>
+          </div>
+        </div>`;
+    });
+
+    const ts = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    html += `<div class="market-ts">Updated ${ts}</div>`;
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Markets unavailable</div>`;
+  }
+}
+
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 function loadAll(state, force) {
+  loadMarkets();
   loadQuote(state, force);
   loadDigest(state, force);
   loadLearn(state, force);
@@ -951,24 +1067,28 @@ async function loadDigest(state, force) {
   try {
     const feeds = await Promise.allSettled([
       fetchRSS('https://rss.cbc.ca/lineup/toronto.xml'),
-      fetchRSS('https://rss.cbc.ca/lineup/world.xml'),
       fetchRSS('https://rss.cbc.ca/lineup/canada.xml'),
+      fetchRSS('https://rss.cbc.ca/lineup/world.xml'),
       fetchRSS('https://www.cp24.com/rss/latest/'),
+      fetchRSS('https://nationalpost.com/feed'),
+      fetchRSS('https://www.blogto.com/rss.xml'),
+      fetchRSS('https://feeds.news24.com/articles/news24/TopStories/rss'),
+      fetchRSS('https://www.dailymaverick.co.za/feed/'),
     ]);
     const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
     if (items.length === 0) throw new Error('Could not reach news feeds');
-    const feedText = items.slice(0, 20).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
+    const feedText = items.slice(0, 28).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
     const interests = state.activeInterests.join(', ');
     const text = await claude(
-      `These are today's real headlines from RSS feeds:\n${feedText}\n\nThe user's interests are: ${interests}. They are based in Toronto, Canada.\n\nSelect 4 items worth their attention — mix Toronto/Canada local with global. Write a sharp headline and 2-sentence summary with real context for each. Flag Toronto-specific items (events, closures, city news).\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"one sentence on why this matters","toronto":true}]`,
+      `These are today's real headlines from RSS feeds:\n${feedText}\n\nThe user's interests are: ${interests}. They are based in Toronto, Canada with ties to South Africa.\n\nSelect exactly 5 items using this mix:\n- 2 Canada items (at least one Toronto-specific: local events, road closures, city news)\n- 1 South Africa item\n- 2 global items\n\nFor each: sharp headline, 2-sentence summary with real context, one "why it matters" sentence. Flag the region.\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
       'Return only valid JSON array, no markdown fences.'
     );
     const newsItems = parseJSON(text);
     el.innerHTML = `
-      <div class="digest-intro">Four things worth your attention today, from live news feeds.</div>
+      <div class="digest-intro">Five things worth your attention today, from live news feeds.</div>
       ${newsItems.map(i => `
         <div class="news-item">
-          <div class="news-source">${i.source}${i.toronto ? ' · Toronto' : ''}</div>
+          <div class="news-source">${i.source} · ${i.region}</div>
           <div class="news-headline">${i.headline}</div>
           <div class="news-summary">${i.summary} <em>${i.why}</em></div>
         </div>`).join('')}`;
@@ -1067,27 +1187,13 @@ async function loadQuiz(history, force) {
     </div>`;
 
   try {
-    const pool = history.slice(-8);
-    const topicsForPrompt = pool.map(h => `"${h.topic}"${h.body ? ': ' + h.body.slice(0, 120) : ''}`).join('\n');
+    // Shuffle history so quiz doesn't always fixate on the most recent topic
+    const shuffled = [...history].sort(() => Math.random() - 0.5);
+    const pool = shuffled.slice(0, 6);
+    const topicsForPrompt = pool.map(h => `- "${h.topic}" (${h.tag || 'general'})${h.body ? ': ' + h.body.slice(0, 120) : ''}`).join('\n');
 
     const text = await claude(
-      `Based on these topics the user has previously studied:
-${topicsForPrompt}
-
-Generate 3 multiple-choice quiz questions that test genuine understanding, not just recall.
-- Questions should be specific and non-trivial — avoid "what is X" type questions
-- Prefer questions that require applying or connecting knowledge
-- Each question must have exactly 4 options (A, B, C, D), one correct
-- Include a brief explanation (2 sentences) for why the correct answer is right
-
-Return JSON array only:
-[{
-  "topic": "which topic this tests",
-  "question": "...",
-  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
-  "correct": 0,
-  "explanation": "..."
-}]`,
+      `The user has studied these topics:\n${topicsForPrompt}\n\nGenerate 3 multiple-choice quiz questions — ONE question per different topic (never two questions on the same topic). Spread across different subjects and fields. Questions should test genuine understanding, not just recall — prefer applying or connecting knowledge.\n\nEach question: exactly 4 options (A–D), one correct, brief 2-sentence explanation.\n\nReturn JSON array only:\n[{\n  "topic": "which topic this tests",\n  "question": "...",\n  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],\n  "correct": 0,\n  "explanation": "..."\n}]`,
       'Return only valid JSON array, no markdown fences.'
     );
 
@@ -1250,7 +1356,7 @@ Return JSON: {"title":"...","type":"Wikipedia|YouTube|Documentary|Essay|Podcast"
 // ─── REFRESH / RESET ──────────────────────────────────────────────────────────
 function refreshAll() {
   const state = getState();
-  ['quoteArea','digestArea','learnArea','pulseArea','rabbitArea'].forEach(id => {
+  ['quoteArea','digestArea','learnArea','pulseArea','rabbitArea','marketsArea'].forEach(id => {
     document.getElementById(id).innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
   });
   const qEl = document.getElementById('quizArea');
