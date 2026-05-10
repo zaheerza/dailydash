@@ -761,6 +761,20 @@ function saveState(s) {
   localStorage.setItem('mypage_state', JSON.stringify(s));
 }
 
+// ─── DAILY CACHE ──────────────────────────────────────────────────────────────
+const TODAY = new Date().toDateString();
+
+function getCached(key) {
+  try {
+    const item = JSON.parse(localStorage.getItem('ddc_' + key));
+    return (item && item.date === TODAY) ? item.value : null;
+  } catch { return null; }
+}
+
+function setCache(key, value) {
+  localStorage.setItem('ddc_' + key, JSON.stringify({ date: TODAY, value }));
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Date
@@ -837,6 +851,19 @@ function toggleInterest(tag) {
   renderInterestTags(state);
 }
 
+// ─── RSS FETCH ────────────────────────────────────────────────────────────────
+async function fetchRSS(url) {
+  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`;
+  const r = await fetch(api);
+  const d = await r.json();
+  if (d.status !== 'ok') return [];
+  return d.items.map(i => ({
+    title: i.title,
+    summary: (i.description || i.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
+    source: d.feed.title || url
+  }));
+}
+
 // ─── API CALL ─────────────────────────────────────────────────────────────────
 async function claude(prompt, systemPrompt) {
   const state = getState();
@@ -861,17 +888,19 @@ async function claude(prompt, systemPrompt) {
 }
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
-function loadAll(state) {
-  loadQuote(state);
-  loadDigest(state);
-  loadLearn(state);
-  loadPulse(state);
-  loadRabbitHole(state);
+function loadAll(state, force) {
+  loadQuote(state, force);
+  loadDigest(state, force);
+  loadLearn(state, force);
+  loadPulse(state, force);
+  loadRabbitHole(state, force);
 }
 
 // ─── QUOTE ────────────────────────────────────────────────────────────────────
-async function loadQuote(state) {
+async function loadQuote(state, force) {
   const el = document.getElementById('quoteArea');
+  const cached = getCached('quote');
+  if (cached && !force) { el.innerHTML = cached; return; }
   try {
     const interests = state.activeInterests.join(', ');
     const text = await claude(
@@ -886,83 +915,97 @@ Return JSON only: {"type":"poem|quran|quote","text":"...","source":"...","contex
         <div class="quote-text">${q.text}</div>
         <div class="quote-source">${q.source} ${q.context ? '· ' + q.context : ''}</div>
       </div>`;
+    setCache('quote', el.innerHTML);
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load opening: ${e.message}</div>`;
   }
 }
 
 // ─── DIGEST ───────────────────────────────────────────────────────────────────
-async function loadDigest(state) {
+async function loadDigest(state, force) {
   const el = document.getElementById('digestArea');
+  const cached = getCached('digest');
+  if (cached && !force) { el.innerHTML = cached; return; }
   try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://rss.cbc.ca/lineup/toronto.xml'),
+      fetchRSS('https://rss.cbc.ca/lineup/world.xml'),
+      fetchRSS('https://rss.cbc.ca/lineup/canada.xml'),
+      fetchRSS('https://www.cp24.com/rss/latest/'),
+    ]);
+    const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+    if (items.length === 0) throw new Error('Could not reach news feeds');
+    const feedText = items.slice(0, 20).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
     const interests = state.activeInterests.join(', ');
-    const today = new Date().toDateString();
     const text = await claude(
-      `Today is ${today}. The user's interests are: ${interests}. They read The Guardian UK, CBC, and IOL South Africa.
-
-Generate 4 news digest items that are genuinely important or intellectually interesting right now — not sensational, not trivial. Mix global and local to South Africa/Africa. For each: write a sharp headline and a 2-sentence summary that gives real context, not just "X happened." Make the summaries feel like a well-read friend telling you what matters and why.
-
-Return JSON array only: [{"source":"Guardian|CBC|IOL|Reuters|etc","headline":"...","summary":"...","why":"one sentence on why this matters"}]`,
+      `These are today's real headlines from RSS feeds:\n${feedText}\n\nThe user's interests are: ${interests}. They are based in Toronto, Canada.\n\nSelect 4 items worth their attention — mix Toronto/Canada local with global. Write a sharp headline and 2-sentence summary with real context for each. Flag Toronto-specific items (events, closures, city news).\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"one sentence on why this matters","toronto":true}]`,
       'Return only valid JSON array, no markdown fences.'
     );
-    const items = JSON.parse(text);
+    const newsItems = JSON.parse(text);
     el.innerHTML = `
-      <div class="digest-intro">Four things worth your attention today, filtered for what you actually care about.</div>
-      ${items.map(i => `
+      <div class="digest-intro">Four things worth your attention today, from live news feeds.</div>
+      ${newsItems.map(i => `
         <div class="news-item">
-          <div class="news-source">${i.source}</div>
+          <div class="news-source">${i.source}${i.toronto ? ' · Toronto' : ''}</div>
           <div class="news-headline">${i.headline}</div>
           <div class="news-summary">${i.summary} <em>${i.why}</em></div>
         </div>`).join('')}`;
+    setCache('digest', el.innerHTML);
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load digest: ${e.message}</div>`;
   }
 }
 
 // ─── LEARN ────────────────────────────────────────────────────────────────────
-async function loadLearn(state) {
+async function loadLearn(state, force) {
   const el = document.getElementById('learnArea');
-  try {
-    const history = state.learnHistory.slice(-5);
-    const interests = state.activeInterests.join(', ');
-    const historyStr = history.length
-      ? `Previous topics: ${history.map(h => h.topic || h).join(', ')}. Build on one of these or open a related new thread.`
-      : `No previous topics. Start something foundational in one of: ${interests}.`;
+  let l = getCached('learn');
 
-    const text = await claude(
-      `You are building a daily learning scaffold for someone interested in: ${interests}. ${historyStr}
+  if (!l || force) {
+    el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> building on yesterday...</div>`;
+    try {
+      const history = state.learnHistory.slice(-5);
+      const interests = state.activeInterests.join(', ');
+      const historyStr = history.length
+        ? `Previous topics: ${history.map(h => h.topic || h).join(', ')}. Build on one of these or open a related new thread.`
+        : `No previous topics. Start something foundational in one of: ${interests}.`;
+
+      const text = await claude(
+        `You are building a daily learning scaffold for someone interested in: ${interests}. ${historyStr}
 
 Today, teach something genuinely interesting: a concept, historical event, scientific idea, philosophical tension, or cultural thread. Keep it under 200 words but make it feel complete. End with one question to sit with, or one thing to notice in the world today that connects to this.
 
 Return JSON only: {"topic":"short title","day":"Day 1|Continuing from X|etc","body":"...","tag":"the field this belongs to"}`,
-      'Return only valid JSON, no markdown fences.'
-    );
-    const l = JSON.parse(text);
+        'Return only valid JSON, no markdown fences.'
+      );
+      l = JSON.parse(text);
 
-    // Save to history — store topic + body snippet for quiz use
-    const newState = getState();
-    const entry = { topic: l.topic, tag: l.tag, body: l.body.slice(0, 400) };
-    newState.learnHistory = [...(newState.learnHistory || []).map(h => typeof h === 'string' ? { topic: h, tag: '', body: '' } : h), entry].slice(-30);
-    saveState(newState);
-    updateStreak(newState);
-
-    el.innerHTML = `
-      <div class="learn-card">
-        <div class="learn-day">${l.day}</div>
-        <div class="learn-topic">${l.topic}</div>
-        <div class="learn-body">${l.body.split('\n').map(p => p ? `<p>${p}</p>` : '').join('')}</div>
-        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
-          <div class="learn-tag" onclick="deepenLearn('${l.topic.replace(/'/g,"\\'")}', '${l.tag}')">${l.tag} — go deeper</div>
-        </div>
-      </div>`;
-
-    // Load quiz after lesson renders — use prior history if available, else today's lesson
-    const quizHistory = newState.learnHistory.slice(0, -1); // prior topics
-    const quizPool = quizHistory.length >= 1 ? quizHistory : [entry];
-    loadQuiz(quizPool);
-  } catch(e) {
-    el.innerHTML = `<div class="error-msg">Could not load learning: ${e.message}</div>`;
+      const newState = getState();
+      const entry = { topic: l.topic, tag: l.tag, body: l.body.slice(0, 400) };
+      newState.learnHistory = [...(newState.learnHistory || []).map(h => typeof h === 'string' ? { topic: h, tag: '', body: '' } : h), entry].slice(-30);
+      saveState(newState);
+      updateStreak(newState);
+      setCache('learn', l);
+    } catch(e) {
+      el.innerHTML = `<div class="error-msg">Could not load learning: ${e.message}</div>`;
+      return;
+    }
   }
+
+  el.innerHTML = `
+    <div class="learn-card">
+      <div class="learn-day">${l.day}</div>
+      <div class="learn-topic">${l.topic}</div>
+      <div class="learn-body">${l.body.split('\n').map(p => p ? `<p>${p}</p>` : '').join('')}</div>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+        <div class="learn-tag" onclick="deepenLearn('${l.topic.replace(/'/g,"\\'")}', '${l.tag}')">${l.tag} — go deeper</div>
+      </div>
+    </div>`;
+
+  const currentState = getState();
+  const quizHistory = currentState.learnHistory.slice(0, -1);
+  const quizPool = quizHistory.length >= 1 ? quizHistory : [{ topic: l.topic, tag: l.tag, body: l.body.slice(0, 400) }];
+  loadQuiz(quizPool, force);
 }
 
 async function deepenLearn(topic, tag) {
@@ -982,8 +1025,16 @@ async function deepenLearn(topic, tag) {
 // ─── QUIZ ENGINE ──────────────────────────────────────────────────────────────
 let quizState = { questions: [], current: 0, score: 0, answered: 0 };
 
-async function loadQuiz(history) {
+async function loadQuiz(history, force) {
   const qEl = document.getElementById('quizArea');
+  const cached = getCached('quiz');
+  if (cached && !force) {
+    qEl.style.display = 'block';
+    quizState = { questions: cached, current: 0, score: 0, answered: 0 };
+    renderQuizQuestion();
+    return;
+  }
+
   qEl.style.display = 'block';
   qEl.innerHTML = `
     <div class="learn-card" style="margin-top:16px;">
@@ -994,7 +1045,6 @@ async function loadQuiz(history) {
     </div>`;
 
   try {
-    // Pick up to 3 past topics to draw from
     const pool = history.slice(-8);
     const topicsForPrompt = pool.map(h => `"${h.topic}"${h.body ? ': ' + h.body.slice(0, 120) : ''}`).join('\n');
 
@@ -1002,7 +1052,7 @@ async function loadQuiz(history) {
       `Based on these topics the user has previously studied:
 ${topicsForPrompt}
 
-Generate 3 multiple-choice quiz questions that test genuine understanding, not just recall. 
+Generate 3 multiple-choice quiz questions that test genuine understanding, not just recall.
 - Questions should be specific and non-trivial — avoid "what is X" type questions
 - Prefer questions that require applying or connecting knowledge
 - Each question must have exactly 4 options (A, B, C, D), one correct
@@ -1020,6 +1070,7 @@ Return JSON array only:
     );
 
     const questions = JSON.parse(text);
+    setCache('quiz', questions);
     quizState = { questions, current: 0, score: 0, answered: 0 };
     renderQuizQuestion();
   } catch(e) {
@@ -1124,8 +1175,10 @@ function nextQuiz() {
 }
 
 // ─── PULSE ────────────────────────────────────────────────────────────────────
-async function loadPulse(state) {
+async function loadPulse(state, force) {
   const el = document.getElementById('pulseArea');
+  const cached = getCached('pulse');
+  if (cached && !force) { el.innerHTML = cached; return; }
   try {
     const text = await claude(
       `Today is ${new Date().toDateString()}. Give 6 one-line world situation updates — like a seasoned foreign correspondent's quick mental map: one per region (Africa, Middle East, Europe, Asia, Americas, Global/Climate). Each is a single crisp sentence: what's the current significant tension or development. Not news headlines — situational awareness.
@@ -1139,14 +1192,17 @@ Return JSON array only: [{"region":"Africa|Middle East|Europe|Asia|Americas|Glob
         <div class="pulse-region">${i.region}</div>
         <div class="pulse-text">${i.text}</div>
       </div>`).join('');
+    setCache('pulse', el.innerHTML);
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
   }
 }
 
 // ─── RABBIT HOLE ─────────────────────────────────────────────────────────────
-async function loadRabbitHole(state) {
+async function loadRabbitHole(state, force) {
   const el = document.getElementById('rabbitArea');
+  const cached = getCached('rabbitHole');
+  if (cached && !force) { el.innerHTML = cached; return; }
   try {
     const interests = state.activeInterests.join(', ');
     const text = await claude(
@@ -1163,6 +1219,7 @@ Return JSON: {"title":"...","type":"Wikipedia|YouTube|Documentary|Essay|Podcast"
         <div class="rh-cta" style="margin-top:8px;font-size:12px;">${r.hook}</div>
         <div class="rh-cta">Click to search →</div>
       </div>`;
+    setCache('rabbitHole', el.innerHTML);
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
   }
@@ -1177,7 +1234,7 @@ function refreshAll() {
   const qEl = document.getElementById('quizArea');
   if (qEl) { qEl.style.display = 'none'; qEl.innerHTML = ''; }
   quizState = { questions: [], current: 0, score: 0, answered: 0 };
-  loadAll(state);
+  loadAll(state, true);
 }
 
 function clearAndReset() {
