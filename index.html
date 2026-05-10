@@ -775,6 +775,10 @@ function setCache(key, value) {
   localStorage.setItem('ddc_' + key, JSON.stringify({ date: TODAY, value }));
 }
 
+function parseJSON(text) {
+  return JSON.parse(text.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/m, '').trim());
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Date
@@ -853,15 +857,33 @@ function toggleInterest(tag) {
 
 // ─── RSS FETCH ────────────────────────────────────────────────────────────────
 async function fetchRSS(url) {
-  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`;
-  const r = await fetch(api);
-  const d = await r.json();
-  if (d.status !== 'ok') return [];
-  return d.items.map(i => ({
-    title: i.title,
-    summary: (i.description || i.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
-    source: d.feed.title || url
-  }));
+  // Try rss2json first
+  try {
+    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`);
+    const d = await r.json();
+    if (d.status === 'ok' && d.items.length > 0) {
+      return d.items.map(i => ({
+        title: i.title,
+        summary: (i.description || i.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
+        source: d.feed.title || new URL(url).hostname
+      }));
+    }
+  } catch {}
+
+  // Fallback: fetch raw XML via allorigins proxy
+  try {
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const d = await r.json();
+    const doc = new DOMParser().parseFromString(d.contents, 'application/xml');
+    const feedTitle = doc.querySelector('channel > title')?.textContent || new URL(url).hostname;
+    return [...doc.querySelectorAll('item')].slice(0, 8).map(item => ({
+      title: item.querySelector('title')?.textContent?.trim() || '',
+      summary: (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
+      source: feedTitle
+    }));
+  } catch {}
+
+  return [];
 }
 
 // ─── API CALL ─────────────────────────────────────────────────────────────────
@@ -909,7 +931,7 @@ async function loadQuote(state, force) {
 Return JSON only: {"type":"poem|quran|quote","text":"...","source":"...","context":"one sentence of context"}`,
       'Return only valid JSON, no markdown fences.'
     );
-    const q = JSON.parse(text);
+    const q = parseJSON(text);
     el.innerHTML = `
       <div class="quote-block">
         <div class="quote-text">${q.text}</div>
@@ -941,7 +963,7 @@ async function loadDigest(state, force) {
       `These are today's real headlines from RSS feeds:\n${feedText}\n\nThe user's interests are: ${interests}. They are based in Toronto, Canada.\n\nSelect 4 items worth their attention — mix Toronto/Canada local with global. Write a sharp headline and 2-sentence summary with real context for each. Flag Toronto-specific items (events, closures, city news).\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"one sentence on why this matters","toronto":true}]`,
       'Return only valid JSON array, no markdown fences.'
     );
-    const newsItems = JSON.parse(text);
+    const newsItems = parseJSON(text);
     el.innerHTML = `
       <div class="digest-intro">Four things worth your attention today, from live news feeds.</div>
       ${newsItems.map(i => `
@@ -978,7 +1000,7 @@ Today, teach something genuinely interesting: a concept, historical event, scien
 Return JSON only: {"topic":"short title","day":"Day 1|Continuing from X|etc","body":"...","tag":"the field this belongs to"}`,
         'Return only valid JSON, no markdown fences.'
       );
-      l = JSON.parse(text);
+      l = parseJSON(text);
 
       const newState = getState();
       const entry = { topic: l.topic, tag: l.tag, body: l.body.slice(0, 400) };
@@ -1069,7 +1091,7 @@ Return JSON array only:
       'Return only valid JSON array, no markdown fences.'
     );
 
-    const questions = JSON.parse(text);
+    const questions = parseJSON(text);
     setCache('quiz', questions);
     quizState = { questions, current: 0, score: 0, answered: 0 };
     renderQuizQuestion();
@@ -1186,7 +1208,7 @@ async function loadPulse(state, force) {
 Return JSON array only: [{"region":"Africa|Middle East|Europe|Asia|Americas|Global","text":"..."}]`,
       'Return only valid JSON array, no markdown fences.'
     );
-    const items = JSON.parse(text);
+    const items = parseJSON(text);
     el.innerHTML = items.map(i => `
       <div class="pulse-item">
         <div class="pulse-region">${i.region}</div>
@@ -1211,7 +1233,7 @@ async function loadRabbitHole(state, force) {
 Return JSON: {"title":"...","type":"Wikipedia|YouTube|Documentary|Essay|Podcast","hook":"one irresistible sentence about why this is worth 10 minutes","searchQuery":"what to type into Google/YouTube"}`,
       'Return only valid JSON, no markdown fences.'
     );
-    const r = JSON.parse(text);
+    const r = parseJSON(text);
     el.innerHTML = `
       <div class="rabbit-hole" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(r.searchQuery)}','_blank')">
         <div class="rh-label">${r.type}</div>
