@@ -661,6 +661,93 @@
     font-weight: 400;
   }
 
+  /* BRAIN FOOD */
+  .brain-food-card {
+    background: #f5f5f0;
+    padding: 18px 20px;
+    border-left: 3px solid var(--ink);
+  }
+
+  .brain-food-text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+
+  .brain-food-attr {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: 10px;
+  }
+
+  /* EVENTS */
+  .event-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .event-item:last-child { border-bottom: none; }
+
+  .event-date {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 3px;
+  }
+
+  .event-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .event-desc { font-size: 12px; color: var(--mid); line-height: 1.5; }
+
+  /* WIKIPEDIA */
+  .wiki-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .wiki-extract {
+    font-size: 12px;
+    color: var(--mid);
+    line-height: 1.7;
+    margin-bottom: 10px;
+    display: none;
+  }
+
+  .wiki-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .wiki-toggle, .wiki-link {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    padding: 0;
+    text-decoration: none;
+  }
+
+  .wiki-toggle:hover, .wiki-link:hover { color: var(--ink); }
+
   /* ── MOBILE ────────────────────────────────────────────────────────────── */
   @media (max-width: 768px) {
     body { padding: 0 0 48px; }
@@ -745,6 +832,18 @@
         <div id="digestArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> gathering the world...</div></div>
       </div>
 
+      <!-- Canada News -->
+      <div class="section">
+        <div class="section-label">Canada</div>
+        <div id="canadaArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> scanning Canadian sources...</div></div>
+      </div>
+
+      <!-- Tech & AI -->
+      <div class="section">
+        <div class="section-label">Tech &amp; AI</div>
+        <div id="techAiArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> reading the wires...</div></div>
+      </div>
+
       <!-- Learn -->
       <div class="section">
         <div class="section-label">Today's Learning</div>
@@ -773,10 +872,28 @@
         <div id="marketsArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
       </div>
 
+      <!-- Brain Food -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Brain Food</div>
+        <div id="brainFoodArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
       <!-- Pulse -->
       <div class="sidebar-section">
         <div class="sidebar-label">World at a Glance</div>
         <div id="pulseArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Toronto Events -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Toronto Events</div>
+        <div id="eventsArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Wikipedia Discovery -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Today's Discovery</div>
+        <div id="wikiArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
       </div>
 
       <!-- Interests -->
@@ -820,15 +937,17 @@ function saveState(s) {
 // ─── DAILY CACHE ──────────────────────────────────────────────────────────────
 const TODAY = new Date().toDateString();
 
+const CACHE_VER = 'v6'; // bump to bust stale cache across all devices
+
 function getCached(key) {
   try {
-    const item = JSON.parse(localStorage.getItem('ddc_' + key));
+    const item = JSON.parse(localStorage.getItem(`ddc_${CACHE_VER}_${key}`));
     return (item && item.date === TODAY) ? item.value : null;
   } catch { return null; }
 }
 
 function setCache(key, value) {
-  localStorage.setItem('ddc_' + key, JSON.stringify({ date: TODAY, value }));
+  localStorage.setItem(`ddc_${CACHE_VER}_${key}`, JSON.stringify({ date: TODAY, value }));
 }
 
 function parseJSON(text) {
@@ -1041,13 +1160,197 @@ async function loadMarkets() {
   }
 }
 
+// ─── BRAIN FOOD ───────────────────────────────────────────────────────────────
+async function loadBrainFood(state, force) {
+  const el = document.getElementById('brainFoodArea');
+  const cached = getCached('brainFood');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    const interests = state.activeInterests.join(', ');
+    const text = await claude(
+      `Write a "Brain Food" reflection in the style of Shane Parrish's Farnam Street newsletter. Pick one of: a mental model, a thinking tool, or a sharp observation about human behaviour or decision-making. Tie it loosely to one of these interests: ${interests}. 2–3 sentences, no fluff, no inspirational clichés. End with one short sentence that lands.
+
+Return JSON only: {"reflection":"...","concept":"the mental model or concept name"}`,
+      'Return only valid JSON, no markdown fences.'
+    );
+    const b = parseJSON(text);
+    el.innerHTML = `
+      <div class="brain-food-card">
+        <div class="brain-food-text">${b.reflection}</div>
+        <div class="brain-food-attr">${b.concept}</div>
+      </div>`;
+    setCache('brainFood', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── CANADA NEWS ──────────────────────────────────────────────────────────────
+async function loadCanadaNews(state, force) {
+  const el = document.getElementById('canadaArea');
+  const cached = getCached('canada');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://www.thestar.com/content/thestar/feed.rss'),
+      fetchRSS('https://www.theglobeandmail.com/arc/outboundfeeds/rss/'),
+      fetchRSS('https://macleans.ca/feed/'),
+    ]);
+    const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+    const interests = state.activeInterests.join(', ');
+
+    let prompt;
+    if (items.length > 0) {
+      const feedText = items.slice(0, 18).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
+      prompt = `These are live headlines from Canadian news sources:\n${feedText}\n\nInterests: ${interests}. Reader is in Toronto.\n\nSelect 4 items: 2 national Canada, 1 Toronto-specific, 1 FT-style financial/geopolitical item (generate this one in FT editorial voice — label source as "FT Style").\n\nFor each: sharp headline, 1-sentence summary, 1-sentence "why it matters". Label FT-generated item clearly.\n\nReturn JSON array: [{"source":"...","headline":"...","summary":"...","why":"...","generated":false}]`;
+    } else {
+      prompt = `Today is ${new Date().toDateString()}. Generate 4 Canadian news items for a Toronto reader. Mix: 2 national Canada, 1 Toronto-local, 1 FT-style financial/geopolitical (label source "FT Style", generated:true). Interests: ${interests}.\n\nReturn JSON array: [{"source":"...","headline":"...","summary":"...","why":"...","generated":true}]`;
+    }
+
+    const text = await claude(prompt, 'Return only valid JSON array, no markdown fences.');
+    const newsItems = parseJSON(text);
+    const note = items.length > 0 ? `${items.length} articles from Star · Globe · Maclean's` : 'AI-generated · live feeds unavailable';
+    el.innerHTML = `
+      <div class="digest-intro">${note}</div>
+      ${newsItems.map(i => `
+        <div class="news-item">
+          <div class="news-source">${i.source}${i.generated ? ' · AI-generated' : ''}</div>
+          <div class="news-headline">${i.headline}</div>
+          <div class="news-summary">${i.summary} <em>${i.why}</em></div>
+        </div>`).join('')}`;
+    setCache('canada', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── TECH & AI ────────────────────────────────────────────────────────────────
+async function loadTechAI(state, force) {
+  const el = document.getElementById('techAiArea');
+  const cached = getCached('techAi');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://www.deeplearning.ai/feed/'),
+      fetchRSS('https://turingpost.substack.com/feed/'),
+    ]);
+    const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    let prompt, note;
+    if (items.length > 0) {
+      const feedText = items.slice(0, 12).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
+      prompt = `These are live headlines from AI/ML newsletters:\n${feedText}\n\nSummarise 3 items in this editorial mix: 1 in the style of The Batch by deeplearning.ai (practical, educator's voice, label "The Batch"), 1 in the style of The Turing Post (research-depth, label "Turing Post"), 1 your own synthesis of what matters most right now (label "Synthesis"). Not hype-driven. Each: sharp 1-line headline + 2-sentence summary.\n\nReturn JSON: [{"source":"The Batch|Turing Post|Synthesis","headline":"...","summary":"...","live":true}]`;
+      note = `${items.length} articles scanned`;
+    } else {
+      prompt = `Today is ${new Date().toDateString()}. Generate 3 AI/tech digest items: 1 in the style of The Batch by deeplearning.ai (practical, educator-voice, label "The Batch"), 1 in the style of The Turing Post (research-depth, label "Turing Post"), 1 synthesis of what matters in AI right now (label "Synthesis"). Not hype. Each: headline + 2-sentence summary.\n\nReturn JSON: [{"source":"The Batch|Turing Post|Synthesis","headline":"...","summary":"...","live":false}]`;
+      note = 'AI-generated · live feeds unavailable';
+    }
+
+    const text = await claude(prompt, 'Return only valid JSON array, no markdown fences.');
+    const techItems = parseJSON(text);
+    el.innerHTML = `
+      <div class="digest-intro">${note}</div>
+      ${techItems.map(i => `
+        <div class="news-item">
+          <div class="news-source">${i.source}${!i.live ? ' · AI-generated' : ''}</div>
+          <div class="news-headline">${i.headline}</div>
+          <div class="news-summary">${i.summary}</div>
+        </div>`).join('')}`;
+    setCache('techAi', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── TORONTO EVENTS ───────────────────────────────────────────────────────────
+async function loadTorontoEvents(force) {
+  const el = document.getElementById('eventsArea');
+  const cached = getCached('torontoEvents');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    // Try Luma public discover API
+    let events = [];
+    try {
+      const lumaUrl = 'https://api.lu.ma/public/v1/discover/get-discover-events?geo_city=Toronto&pagination_limit=8';
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(lumaUrl)}`);
+      const d = await r.json();
+      events = (d.entries || []).slice(0, 5).map(e => ({
+        name: e.event?.name || '',
+        date: e.event?.start_at ? new Date(e.event.start_at).toLocaleDateString('en-CA', { month:'short', day:'numeric' }) : '',
+        desc: (e.event?.description || '').replace(/<[^>]*>/g, '').slice(0, 100)
+      })).filter(e => e.name);
+    } catch {}
+
+    if (events.length > 0) {
+      el.innerHTML = events.map(e => `
+        <div class="event-item">
+          <div class="event-date">${e.date}</div>
+          <div class="event-name">${e.name}</div>
+          ${e.desc ? `<div class="event-desc">${e.desc}</div>` : ''}
+        </div>`).join('') + `<div class="market-ts">Via Luma · Toronto</div>`;
+    } else {
+      // Claude fallback
+      const text = await claude(
+        `Today is ${new Date().toDateString()}. Generate 3 plausible upcoming Toronto AI/tech/innovation events for the next 2–3 weeks. Think Trajectory Labs, Communitech, MaRS, university AI labs, startup meetups.\n\nReturn JSON: [{"name":"...","date":"Mon DD","desc":"one sentence"}]`,
+        'Return only valid JSON array, no markdown fences.'
+      );
+      const evs = parseJSON(text);
+      el.innerHTML = evs.map(e => `
+        <div class="event-item">
+          <div class="event-date">${e.date}</div>
+          <div class="event-name">${e.name}</div>
+          <div class="event-desc">${e.desc}</div>
+        </div>`).join('') + `<div class="market-ts">AI-generated · check Luma for live listings</div>`;
+    }
+    setCache('torontoEvents', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load events</div>`;
+  }
+}
+
+// ─── WIKIPEDIA ────────────────────────────────────────────────────────────────
+async function loadWikipedia() {
+  const el = document.getElementById('wikiArea');
+  // Not cached — random every day is fine, Wikipedia API is free
+  try {
+    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary');
+    const d = await r.json();
+    const title = d.title || '';
+    const extract = (d.extract || '').slice(0, 400);
+    const url = d.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+    el.innerHTML = `
+      <div class="wiki-title">${title}</div>
+      <div class="wiki-extract" id="wikiExtract">${extract}</div>
+      <div class="wiki-footer">
+        <button class="wiki-toggle" onclick="toggleWiki()">Read extract ▾</button>
+        <a class="wiki-link" href="${url}" target="_blank" rel="noopener">Wikipedia →</a>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load</div>`;
+  }
+}
+
+function toggleWiki() {
+  const ext = document.getElementById('wikiExtract');
+  const btn = document.querySelector('.wiki-toggle');
+  if (!ext || !btn) return;
+  const show = ext.style.display === 'none' || ext.style.display === '';
+  ext.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? 'Hide ▴' : 'Read extract ▾';
+}
+
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 function loadAll(state, force) {
   loadMarkets();
   loadQuote(state, force);
+  loadBrainFood(state, force);
   loadDigest(state, force);
+  loadCanadaNews(state, force);
+  loadTechAI(state, force);
   loadLearn(state, force);
   loadPulse(state, force);
+  loadTorontoEvents(force);
+  loadWikipedia();
   loadRabbitHole(state, force);
 }
 
@@ -1391,7 +1694,7 @@ Return JSON: {"title":"...","type":"Wikipedia|YouTube|Documentary|Essay|Podcast"
 // ─── REFRESH / RESET ──────────────────────────────────────────────────────────
 function refreshAll() {
   const state = getState();
-  ['quoteArea','digestArea','learnArea','pulseArea','rabbitArea','marketsArea'].forEach(id => {
+  ['quoteArea','digestArea','canadaArea','techAiArea','learnArea','pulseArea','brainFoodArea','eventsArea','wikiArea','rabbitArea','marketsArea'].forEach(id => {
     document.getElementById(id).innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
   });
   const qEl = document.getElementById('quizArea');
