@@ -832,7 +832,12 @@ function setCache(key, value) {
 }
 
 function parseJSON(text) {
-  return JSON.parse(text.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/m, '').trim());
+  const s = text.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/m, '').trim();
+  try { return JSON.parse(s); } catch {}
+  // Haiku sometimes adds preamble — extract the first JSON object or array
+  const m = s.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+  if (m) { try { return JSON.parse(m[1]); } catch {} }
+  throw new SyntaxError('No valid JSON in response');
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -984,10 +989,22 @@ async function loadMarkets() {
   const el = document.getElementById('marketsArea');
   try {
     const syms = MARKET_SYMBOLS.map(s => s.sym).join(',');
-    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}`;
-    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`);
-    const d = await r.json();
-    const quotes = JSON.parse(d.contents).quoteResponse.result;
+    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${syms}`;
+
+    let quotes;
+    // Try corsproxy.io (returns raw response)
+    try {
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`);
+      const d = await r.json();
+      quotes = d.quoteResponse?.result || [];
+    } catch {}
+    // Fall back to allorigins (wraps response in .contents)
+    if (!quotes?.length) {
+      const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`);
+      const d = await r.json();
+      quotes = JSON.parse(d.contents).quoteResponse?.result || [];
+    }
+    if (!quotes?.length) throw new Error('No data');
     const qMap = {};
     quotes.forEach(q => qMap[q.symbol] = q);
 
@@ -1080,16 +1097,29 @@ async function loadDigest(state, force) {
       fetchRSS('https://www.dailymaverick.co.za/feed/'),
     ]);
     const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-    if (items.length === 0) throw new Error('Could not reach news feeds');
-    const feedText = items.slice(0, 28).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
     const interests = state.activeInterests.join(', ');
-    const text = await claude(
-      `These are today's real headlines from RSS feeds:\n${feedText}\n\nThe user's interests are: ${interests}. They are based in Toronto, Canada with ties to South Africa.\n\nSelect exactly 5 items using this mix:\n- 2 Canada items (at least one Toronto-specific: local events, road closures, city news)\n- 1 South Africa item\n- 2 global items\n\nFor each: sharp headline, 2-sentence summary with real context, one "why it matters" sentence. Flag the region.\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
-      'Return only valid JSON array, no markdown fences.'
-    );
-    const newsItems = parseJSON(text);
+    let newsItems, digestNote;
+
+    if (items.length > 0) {
+      const feedText = items.slice(0, 28).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
+      const text = await claude(
+        `These are today's real headlines from RSS feeds:\n${feedText}\n\nThe user's interests are: ${interests}. They are based in Toronto, Canada with ties to South Africa.\n\nSelect exactly 5 items using this mix:\n- 2 Canada items (at least one Toronto-specific: local events, road closures, city news)\n- 1 South Africa item\n- 2 global items\n\nFor each: sharp headline, 2-sentence summary with real context, one "why it matters" sentence. Flag the region.\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
+        'Return only valid JSON array, no markdown fences.'
+      );
+      newsItems = parseJSON(text);
+      digestNote = `From live feeds · ${items.length} articles scanned`;
+    } else {
+      // RSS unavailable — fall back to Claude knowledge
+      const text = await claude(
+        `Today is ${new Date().toDateString()}. Generate a news digest for a reader in Toronto, Canada with ties to South Africa. Interests: ${interests}.\n\nSelect 5 genuinely important news items using this mix: 2 Canada/Toronto, 1 South Africa, 2 global. For each: sharp headline, 2-sentence summary with context, one "why it matters" sentence.\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
+        'Return only valid JSON array, no markdown fences.'
+      );
+      newsItems = parseJSON(text);
+      digestNote = 'AI-generated · live feeds unavailable';
+    }
+
     el.innerHTML = `
-      <div class="digest-intro">Five things worth your attention today, from live news feeds.</div>
+      <div class="digest-intro">Five things worth your attention · <span style="opacity:0.6;font-size:11px;">${digestNote}</span></div>
       ${newsItems.map(i => `
         <div class="news-item">
           <div class="news-source">${i.source} · ${i.region}</div>
@@ -1323,7 +1353,8 @@ Return JSON array only: [{"region":"Africa|Middle East|Europe|Asia|Americas|Glob
       <div class="pulse-item">
         <div class="pulse-region">${i.region}</div>
         <div class="pulse-text">${i.text}</div>
-      </div>`).join('');
+      </div>`).join('') +
+      `<div class="market-ts">Claude Haiku synthesis · not a live feed</div>`;
     setCache('pulse', el.innerHTML);
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
