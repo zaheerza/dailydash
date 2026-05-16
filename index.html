@@ -947,7 +947,7 @@ function saveState(s) {
 // ─── DAILY CACHE ──────────────────────────────────────────────────────────────
 const TODAY = new Date().toDateString();
 
-const CACHE_VER = 'v7'; // bump to bust stale cache across all devices
+const CACHE_VER = 'v8'; // bump to bust stale cache across all devices
 
 function getCached(key) {
   try {
@@ -1046,33 +1046,56 @@ function toggleInterest(tag) {
 }
 
 // ─── RSS FETCH ────────────────────────────────────────────────────────────────
-async function fetchRSS(url) {
-  // Try rss2json first
+function parseXMLItems(xmlText, fallbackHost) {
   try {
-    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`);
-    const d = await r.json();
-    if (d.status === 'ok' && d.items.length > 0) {
-      return d.items.map(i => ({
-        title: i.title,
-        summary: (i.description || i.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
-        source: d.feed.title || new URL(url).hostname,
-        link: i.link || i.guid || ''
-      }));
-    }
-  } catch {}
-
-  // Fallback: fetch raw XML via allorigins proxy
-  try {
-    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-    const d = await r.json();
-    const doc = new DOMParser().parseFromString(d.contents, 'application/xml');
-    const feedTitle = doc.querySelector('channel > title')?.textContent || new URL(url).hostname;
+    const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+    if (doc.querySelector('parsererror')) return [];
+    const feedTitle = doc.querySelector('channel > title')?.textContent?.trim() || fallbackHost;
     return [...doc.querySelectorAll('item')].slice(0, 8).map(item => ({
       title: item.querySelector('title')?.textContent?.trim() || '',
       summary: (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
       source: feedTitle,
       link: item.querySelector('link')?.textContent?.trim() || item.querySelector('guid')?.textContent?.trim() || ''
-    }));
+    })).filter(i => i.title);
+  } catch { return []; }
+}
+
+async function fetchRSS(url) {
+  const host = new URL(url).hostname;
+  const sig = { signal: AbortSignal.timeout(6000) };
+
+  // 1. corsproxy.io — no rate limit, returns raw XML
+  try {
+    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, sig);
+    if (r.ok) {
+      const text = await r.text();
+      const items = parseXMLItems(text, host);
+      if (items.length) return items;
+    }
+  } catch {}
+
+  // 2. allorigins — wraps in { contents }
+  try {
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, sig);
+    if (r.ok) {
+      const d = await r.json();
+      const items = parseXMLItems(d.contents || '', host);
+      if (items.length) return items;
+    }
+  } catch {}
+
+  // 3. rss2json — rate-limited but works when others fail
+  try {
+    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`, sig);
+    const d = await r.json();
+    if (d.status === 'ok' && d.items?.length) {
+      return d.items.map(i => ({
+        title: i.title,
+        summary: (i.description || i.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
+        source: d.feed.title || host,
+        link: i.link || i.guid || ''
+      }));
+    }
   } catch {}
 
   return [];
@@ -1136,17 +1159,25 @@ async function loadMarkets() {
     const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${syms}`;
 
     let quotes;
-    // Try corsproxy.io (returns raw response)
+    const sig5 = { signal: AbortSignal.timeout(7000) };
+    // 1. corsproxy.io — returns raw JSON
     try {
-      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`);
-      const d = await r.json();
-      quotes = d.quoteResponse?.result || [];
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, sig5);
+      if (r.ok) { const d = await r.json(); quotes = d.quoteResponse?.result || []; }
     } catch {}
-    // Fall back to allorigins (wraps response in .contents)
+    // 2. allorigins — wraps in { contents }
     if (!quotes?.length) {
-      const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`);
-      const d = await r.json();
-      quotes = JSON.parse(d.contents).quoteResponse?.result || [];
+      try {
+        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, sig5);
+        if (r.ok) { const d = await r.json(); quotes = JSON.parse(d.contents).quoteResponse?.result || []; }
+      } catch {}
+    }
+    // 3. codetabs proxy
+    if (!quotes?.length) {
+      try {
+        const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, sig5);
+        if (r.ok) { const d = await r.json(); quotes = d.quoteResponse?.result || []; }
+      } catch {}
     }
     if (!quotes?.length) throw new Error('No data');
     const qMap = {};
@@ -1667,23 +1698,38 @@ function nextQuiz() {
 // ─── PULSE ────────────────────────────────────────────────────────────────────
 async function loadPulse(state, force) {
   const el = document.getElementById('pulseArea');
-  const cached = getCached('pulse');
-  if (cached && !force) { el.innerHTML = cached; return; }
+  // Always refresh — no daily cache — so it reflects today's real news
   try {
+    // Fetch 3 global RSS feeds for live context
+    const [worldItems, news24Items, bbcItems] = await Promise.all([
+      fetchRSS('https://rss.cbc.ca/lineup/world.xml'),
+      fetchRSS('https://feeds.news24.com/articles/news24/TopStories/rss'),
+      fetchRSS('https://feeds.bbci.co.uk/news/world/rss.xml'),
+    ]);
+    const allItems = [...worldItems, ...news24Items, ...bbcItems];
+    let contextBlock = '';
+    if (allItems.length > 0) {
+      const headlineLines = allItems.slice(0, 18)
+        .map((i, idx) => `[${idx}] ${i.source}: ${i.title}`)
+        .join('\n');
+      contextBlock = `\n\nHere are today's live headlines to ground your analysis:\n${headlineLines}`;
+    }
+
     const text = await claude(
-      `Today is ${new Date().toDateString()}. Give 6 one-line world situation updates — like a seasoned foreign correspondent's quick mental map: one per region (Africa, Middle East, Europe, Asia, Americas, Global/Climate). Each is a single crisp sentence: what's the current significant tension or development. Not news headlines — situational awareness.
+      `Today is ${new Date().toDateString()}. You are a seasoned foreign correspondent. Using the headlines below as your primary source, give 6 one-line situational updates — one per region (Africa, Middle East, Europe, Asia, Americas, Global/Climate). Each is a crisp single sentence summarising the most significant current tension or development in that region. Prioritise what the headlines tell you; fill gaps with your knowledge.${contextBlock}
 
 Return JSON array only: [{"region":"Africa|Middle East|Europe|Asia|Americas|Global","text":"..."}]`,
       'Return only valid JSON array, no markdown fences.'
     );
     const items = parseJSON(text);
+    const sourceCount = allItems.length;
+    const ts = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     el.innerHTML = items.map(i => `
       <div class="pulse-item">
         <div class="pulse-region">${i.region}</div>
         <div class="pulse-text">${i.text}</div>
       </div>`).join('') +
-      `<div class="market-ts">Claude Haiku synthesis · not a live feed</div>`;
-    setCache('pulse', el.innerHTML);
+      `<div class="market-ts">Claude synthesis · ${sourceCount} live headlines · updated ${ts}</div>`;
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
   }
