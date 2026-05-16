@@ -167,6 +167,16 @@
     margin-bottom: 7px;
   }
 
+  .news-source a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .news-source a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
   .news-headline {
     font-size: 16px;
     font-weight: 600;
@@ -937,7 +947,7 @@ function saveState(s) {
 // ─── DAILY CACHE ──────────────────────────────────────────────────────────────
 const TODAY = new Date().toDateString();
 
-const CACHE_VER = 'v6'; // bump to bust stale cache across all devices
+const CACHE_VER = 'v7'; // bump to bust stale cache across all devices
 
 function getCached(key) {
   try {
@@ -1045,7 +1055,8 @@ async function fetchRSS(url) {
       return d.items.map(i => ({
         title: i.title,
         summary: (i.description || i.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
-        source: d.feed.title || new URL(url).hostname
+        source: d.feed.title || new URL(url).hostname,
+        link: i.link || i.guid || ''
       }));
     }
   } catch {}
@@ -1059,11 +1070,25 @@ async function fetchRSS(url) {
     return [...doc.querySelectorAll('item')].slice(0, 8).map(item => ({
       title: item.querySelector('title')?.textContent?.trim() || '',
       summary: (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
-      source: feedTitle
+      source: feedTitle,
+      link: item.querySelector('link')?.textContent?.trim() || item.querySelector('guid')?.textContent?.trim() || ''
     }));
   } catch {}
 
   return [];
+}
+
+// ─── RENDER NEWS ITEM ─────────────────────────────────────────────────────────
+function newsItemHTML(source, region, link, headline, summary, why, badge) {
+  const srcHTML = link
+    ? `<a href="${link}" target="_blank" rel="noopener">${source}${region ? ' · ' + region : ''}${badge ? ' · ' + badge : ''} ↗</a>`
+    : `${source}${region ? ' · ' + region : ''}${badge ? ' · ' + badge : ''}`;
+  return `
+    <div class="news-item">
+      <div class="news-source">${srcHTML}</div>
+      <div class="news-headline">${headline}</div>
+      <div class="news-summary">${summary}${why ? ' <em>' + why + '</em>' : ''}</div>
+    </div>`;
 }
 
 // ─── API CALL ─────────────────────────────────────────────────────────────────
@@ -1180,83 +1205,6 @@ Return JSON only: {"reflection":"...","concept":"the mental model or concept nam
         <div class="brain-food-attr">${b.concept}</div>
       </div>`;
     setCache('brainFood', el.innerHTML);
-  } catch(e) {
-    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
-  }
-}
-
-// ─── CANADA NEWS ──────────────────────────────────────────────────────────────
-async function loadCanadaNews(state, force) {
-  const el = document.getElementById('canadaArea');
-  const cached = getCached('canada');
-  if (cached && !force) { el.innerHTML = cached; return; }
-  try {
-    const feeds = await Promise.allSettled([
-      fetchRSS('https://www.thestar.com/content/thestar/feed.rss'),
-      fetchRSS('https://www.theglobeandmail.com/arc/outboundfeeds/rss/'),
-      fetchRSS('https://macleans.ca/feed/'),
-    ]);
-    const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-    const interests = state.activeInterests.join(', ');
-
-    let prompt;
-    if (items.length > 0) {
-      const feedText = items.slice(0, 18).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
-      prompt = `These are live headlines from Canadian news sources:\n${feedText}\n\nInterests: ${interests}. Reader is in Toronto.\n\nSelect 4 items: 2 national Canada, 1 Toronto-specific, 1 FT-style financial/geopolitical item (generate this one in FT editorial voice — label source as "FT Style").\n\nFor each: sharp headline, 1-sentence summary, 1-sentence "why it matters". Label FT-generated item clearly.\n\nReturn JSON array: [{"source":"...","headline":"...","summary":"...","why":"...","generated":false}]`;
-    } else {
-      prompt = `Today is ${new Date().toDateString()}. Generate 4 Canadian news items for a Toronto reader. Mix: 2 national Canada, 1 Toronto-local, 1 FT-style financial/geopolitical (label source "FT Style", generated:true). Interests: ${interests}.\n\nReturn JSON array: [{"source":"...","headline":"...","summary":"...","why":"...","generated":true}]`;
-    }
-
-    const text = await claude(prompt, 'Return only valid JSON array, no markdown fences.');
-    const newsItems = parseJSON(text);
-    const note = items.length > 0 ? `${items.length} articles from Star · Globe · Maclean's` : 'AI-generated · live feeds unavailable';
-    el.innerHTML = `
-      <div class="digest-intro">${note}</div>
-      ${newsItems.map(i => `
-        <div class="news-item">
-          <div class="news-source">${i.source}${i.generated ? ' · AI-generated' : ''}</div>
-          <div class="news-headline">${i.headline}</div>
-          <div class="news-summary">${i.summary} <em>${i.why}</em></div>
-        </div>`).join('')}`;
-    setCache('canada', el.innerHTML);
-  } catch(e) {
-    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
-  }
-}
-
-// ─── TECH & AI ────────────────────────────────────────────────────────────────
-async function loadTechAI(state, force) {
-  const el = document.getElementById('techAiArea');
-  const cached = getCached('techAi');
-  if (cached && !force) { el.innerHTML = cached; return; }
-  try {
-    const feeds = await Promise.allSettled([
-      fetchRSS('https://www.deeplearning.ai/feed/'),
-      fetchRSS('https://turingpost.substack.com/feed/'),
-    ]);
-    const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-
-    let prompt, note;
-    if (items.length > 0) {
-      const feedText = items.slice(0, 12).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
-      prompt = `These are live headlines from AI/ML newsletters:\n${feedText}\n\nSummarise 3 items in this editorial mix: 1 in the style of The Batch by deeplearning.ai (practical, educator's voice, label "The Batch"), 1 in the style of The Turing Post (research-depth, label "Turing Post"), 1 your own synthesis of what matters most right now (label "Synthesis"). Not hype-driven. Each: sharp 1-line headline + 2-sentence summary.\n\nReturn JSON: [{"source":"The Batch|Turing Post|Synthesis","headline":"...","summary":"...","live":true}]`;
-      note = `${items.length} articles scanned`;
-    } else {
-      prompt = `Today is ${new Date().toDateString()}. Generate 3 AI/tech digest items: 1 in the style of The Batch by deeplearning.ai (practical, educator-voice, label "The Batch"), 1 in the style of The Turing Post (research-depth, label "Turing Post"), 1 synthesis of what matters in AI right now (label "Synthesis"). Not hype. Each: headline + 2-sentence summary.\n\nReturn JSON: [{"source":"The Batch|Turing Post|Synthesis","headline":"...","summary":"...","live":false}]`;
-      note = 'AI-generated · live feeds unavailable';
-    }
-
-    const text = await claude(prompt, 'Return only valid JSON array, no markdown fences.');
-    const techItems = parseJSON(text);
-    el.innerHTML = `
-      <div class="digest-intro">${note}</div>
-      ${techItems.map(i => `
-        <div class="news-item">
-          <div class="news-source">${i.source}${!i.live ? ' · AI-generated' : ''}</div>
-          <div class="news-headline">${i.headline}</div>
-          <div class="news-summary">${i.summary}</div>
-        </div>`).join('')}`;
-    setCache('techAi', el.innerHTML);
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
   }
@@ -1384,6 +1332,7 @@ async function loadDigest(state, force) {
   const el = document.getElementById('digestArea');
   const cached = getCached('digest');
   if (cached && !force) { el.innerHTML = cached; return; }
+  el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> fetching live news...</div>`;
   try {
     const feeds = await Promise.allSettled([
       fetchRSS('https://rss.cbc.ca/lineup/toronto.xml'),
@@ -1394,44 +1343,120 @@ async function loadDigest(state, force) {
       fetchRSS('https://nationalpost.com/feed'),
       fetchRSS('https://www.blogto.com/rss.xml'),
       fetchRSS('https://www.theglobeandmail.com/arc/outboundfeeds/rss/'),
-      fetchRSS('https://www.thestar.com/search/?f=rss&t=article&q=*&l=50'),
-      fetchRSS('https://ipolitics.ca/feed/'),
       fetchRSS('https://feeds.news24.com/articles/news24/TopStories/rss'),
       fetchRSS('https://www.dailymaverick.co.za/feed/'),
     ]);
-    const items = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-    const interests = state.activeInterests.join(', ');
-    let newsItems, digestNote;
+    const pool = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
 
-    if (items.length > 0) {
-      const feedText = items.slice(0, 28).map(i => `[${i.source}] ${i.title}. ${i.summary}`).join('\n');
-      const text = await claude(
-        `These are today's real headlines from RSS feeds:\n${feedText}\n\nThe user's interests are: ${interests}. They are based in Toronto, Canada with ties to South Africa.\n\nSelect exactly 5 items using this mix:\n- 2 Canada items (at least one Toronto-specific: local events, road closures, city news)\n- 1 South Africa item\n- 2 global items\n\nFor each: sharp headline, 2-sentence summary with real context, one "why it matters" sentence. Flag the region.\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
-        'Return only valid JSON array, no markdown fences.'
-      );
-      newsItems = parseJSON(text);
-      digestNote = `From live feeds · ${items.length} articles scanned`;
-    } else {
-      // RSS unavailable — fall back to Claude knowledge
-      const text = await claude(
-        `Today is ${new Date().toDateString()}. Generate a news digest for a reader in Toronto, Canada with ties to South Africa. Interests: ${interests}.\n\nSelect 5 genuinely important news items using this mix: 2 Canada/Toronto, 1 South Africa, 2 global. For each: sharp headline, 2-sentence summary with context, one "why it matters" sentence.\n\nReturn JSON array only: [{"source":"...","headline":"...","summary":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
-        'Return only valid JSON array, no markdown fences.'
-      );
-      newsItems = parseJSON(text);
-      digestNote = 'AI-generated · live feeds unavailable';
+    if (pool.length === 0) {
+      el.innerHTML = `<div class="error-msg">Could not reach news feeds. <button onclick="refreshAll()" style="background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;font-size:11px;margin-left:8px;">Retry</button></div>`;
+      return;
     }
 
+    const interests = state.activeInterests.join(', ');
+    const feedItems = pool.slice(0, 30);
+    const feedText = feedItems.map((i, idx) => `[${idx}] [${i.source}] ${i.title}. ${i.summary}`).join('\n');
+
+    const text = await claude(
+      `These are live RSS headlines:\n${feedText}\n\nReader: Toronto, Canada, ties to South Africa. Interests: ${interests}.\n\nSelect 5 by index. Mix: 2 Canada/Toronto, 1 South Africa, 2 global. Write a 2-sentence synthesis for each based ONLY on the text above — do not add facts from training data. Add one "why it matters" sentence. Return the exact idx number.\n\nReturn JSON array: [{"idx":0,"synthesis":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const selections = parseJSON(text);
+    const newsItems = selections.map(s => {
+      const o = feedItems[s.idx] || {};
+      return { source: o.source || '', link: o.link || '', headline: o.title || '', synthesis: s.synthesis, why: s.why, region: s.region };
+    }).filter(i => i.headline);
+
     el.innerHTML = `
-      <div class="digest-intro">Five things worth your attention · <span style="opacity:0.6;font-size:11px;">${digestNote}</span></div>
-      ${newsItems.map(i => `
-        <div class="news-item">
-          <div class="news-source">${i.source} · ${i.region}</div>
-          <div class="news-headline">${i.headline}</div>
-          <div class="news-summary">${i.summary} <em>${i.why}</em></div>
-        </div>`).join('')}`;
+      <div class="digest-intro">Live feeds · ${pool.length} articles scanned</div>
+      ${newsItems.map(i => newsItemHTML(i.source, i.region, i.link, i.headline, i.synthesis, i.why)).join('')}`;
     setCache('digest', el.innerHTML);
   } catch(e) {
     el.innerHTML = `<div class="error-msg">Could not load digest: ${e.message}</div>`;
+  }
+}
+
+// ─── CANADA NEWS ──────────────────────────────────────────────────────────────
+async function loadCanadaNews(state, force) {
+  const el = document.getElementById('canadaArea');
+  const cached = getCached('canada');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> scanning Canadian sources...</div>`;
+  try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://www.thestar.com/content/thestar/feed.rss'),
+      fetchRSS('https://www.theglobeandmail.com/arc/outboundfeeds/rss/'),
+      fetchRSS('https://macleans.ca/feed/'),
+      fetchRSS('https://ipolitics.ca/feed/'),
+    ]);
+    const pool = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    if (pool.length === 0) {
+      el.innerHTML = `<div class="error-msg">Could not reach Canadian feeds. <button onclick="refreshAll()" style="background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;font-size:11px;margin-left:8px;">Retry</button></div>`;
+      return;
+    }
+
+    const interests = state.activeInterests.join(', ');
+    const feedItems = pool.slice(0, 20);
+    const feedText = feedItems.map((i, idx) => `[${idx}] [${i.source}] ${i.title}. ${i.summary}`).join('\n');
+
+    const text = await claude(
+      `Live Canadian headlines:\n${feedText}\n\nReader in Toronto. Interests: ${interests}.\n\nSelect 3 by index from the list above. Mix: 1 national Canada, 1 Toronto-specific, 1 business/politics. Write a 1-sentence synthesis per item based ONLY on the text above. Add "why it matters." Also generate 1 FT-style financial/geopolitical item relevant to Canada (label source "FT Style", idx:-1, link:"").\n\nReturn JSON: [{"idx":0,"synthesis":"...","why":"..."},{"idx":-1,"source":"FT Style","headline":"...","synthesis":"...","why":"...","link":""}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const selections = parseJSON(text);
+    const newsItems = selections.map(s => {
+      if (s.idx === -1) return { source: s.source || 'FT Style', link: '', headline: s.headline || '', synthesis: s.synthesis, why: s.why };
+      const o = feedItems[s.idx] || {};
+      return { source: o.source || '', link: o.link || '', headline: o.title || '', synthesis: s.synthesis, why: s.why };
+    }).filter(i => i.headline);
+
+    el.innerHTML = `
+      <div class="digest-intro">Star · Globe · Maclean's · iPolitics · ${pool.length} articles</div>
+      ${newsItems.map(i => newsItemHTML(i.source, null, i.link, i.headline, i.synthesis, i.why, i.link ? null : 'AI-generated')).join('')}`;
+    setCache('canada', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── TECH & AI ────────────────────────────────────────────────────────────────
+async function loadTechAI(state, force) {
+  const el = document.getElementById('techAiArea');
+  const cached = getCached('techAi');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> reading the wires...</div>`;
+  try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://www.deeplearning.ai/feed/'),
+      fetchRSS('https://turingpost.substack.com/feed/'),
+    ]);
+    const pool = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    if (pool.length === 0) {
+      el.innerHTML = `<div class="error-msg">Could not reach tech feeds. <button onclick="refreshAll()" style="background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;font-size:11px;margin-left:8px;">Retry</button></div>`;
+      return;
+    }
+
+    const feedItems = pool.slice(0, 16);
+    const feedText = feedItems.map((i, idx) => `[${idx}] [${i.source}] ${i.title}. ${i.summary}`).join('\n');
+
+    const text = await claude(
+      `Live AI/ML headlines:\n${feedText}\n\nSelect 3 by index. Aim for variety across: research, practical application, industry news. For each, write a 2-sentence synthesis based ONLY on the text above — no training data. Label each with its actual source name.\n\nReturn JSON: [{"idx":0,"synthesis":"..."}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const selections = parseJSON(text);
+    const techItems = selections.map(s => {
+      const o = feedItems[s.idx] || {};
+      return { source: o.source || '', link: o.link || '', headline: o.title || '', synthesis: s.synthesis };
+    }).filter(i => i.headline);
+
+    el.innerHTML = `
+      <div class="digest-intro">The Batch · Turing Post · ${pool.length} articles scanned</div>
+      ${techItems.map(i => newsItemHTML(i.source, null, i.link, i.headline, i.synthesis, null)).join('')}`;
+    setCache('techAi', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
   }
 }
 
