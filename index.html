@@ -1062,11 +1062,10 @@ function parseXMLItems(xmlText, fallbackHost) {
 
 async function fetchRSS(url) {
   const host = new URL(url).hostname;
-  const sig = { signal: AbortSignal.timeout(6000) };
 
   // 1. corsproxy.io — no rate limit, returns raw XML
   try {
-    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, sig);
+    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
     if (r.ok) {
       const text = await r.text();
       const items = parseXMLItems(text, host);
@@ -1076,7 +1075,7 @@ async function fetchRSS(url) {
 
   // 2. allorigins — wraps in { contents }
   try {
-    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, sig);
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
     if (r.ok) {
       const d = await r.json();
       const items = parseXMLItems(d.contents || '', host);
@@ -1086,7 +1085,7 @@ async function fetchRSS(url) {
 
   // 3. rss2json — rate-limited but works when others fail
   try {
-    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`, sig);
+    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`, { signal: AbortSignal.timeout(6000) });
     const d = await r.json();
     if (d.status === 'ok' && d.items?.length) {
       return d.items.map(i => ({
@@ -1103,8 +1102,9 @@ async function fetchRSS(url) {
 
 // ─── RENDER NEWS ITEM ─────────────────────────────────────────────────────────
 function newsItemHTML(source, region, link, headline, summary, why, badge) {
-  const srcHTML = link
-    ? `<a href="${link}" target="_blank" rel="noopener">${source}${region ? ' · ' + region : ''}${badge ? ' · ' + badge : ''} ↗</a>`
+  const safeLink = /^https?:\/\//.test(link) ? link : '';
+  const srcHTML = safeLink
+    ? `<a href="${safeLink}" target="_blank" rel="noopener">${source}${region ? ' · ' + region : ''}${badge ? ' · ' + badge : ''} ↗</a>`
     : `${source}${region ? ' · ' + region : ''}${badge ? ' · ' + badge : ''}`;
   return `
     <div class="news-item">
@@ -1156,26 +1156,26 @@ async function loadMarkets() {
   const el = document.getElementById('marketsArea');
   try {
     const syms = MARKET_SYMBOLS.map(s => s.sym).join(',');
-    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${syms}`;
+    // v8 on query2 avoids the crumb-token requirement that broke v7/query1 (~2023)
+    const yahooUrl = `https://query2.finance.yahoo.com/v8/finance/quote?symbols=${syms}&formatted=false&lang=en-US&region=US`;
 
     let quotes;
-    const sig5 = { signal: AbortSignal.timeout(7000) };
     // 1. corsproxy.io — returns raw JSON
     try {
-      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, sig5);
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, { signal: AbortSignal.timeout(7000) });
       if (r.ok) { const d = await r.json(); quotes = d.quoteResponse?.result || []; }
     } catch {}
     // 2. allorigins — wraps in { contents }
     if (!quotes?.length) {
       try {
-        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, sig5);
-        if (r.ok) { const d = await r.json(); quotes = JSON.parse(d.contents).quoteResponse?.result || []; }
+        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, { signal: AbortSignal.timeout(7000) });
+        if (r.ok) { const d = await r.json(); quotes = JSON.parse(d.contents || 'null')?.quoteResponse?.result || []; }
       } catch {}
     }
     // 3. codetabs proxy
     if (!quotes?.length) {
       try {
-        const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, sig5);
+        const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, { signal: AbortSignal.timeout(7000) });
         if (r.ok) { const d = await r.json(); quotes = d.quoteResponse?.result || []; }
       } catch {}
     }
@@ -1533,7 +1533,7 @@ Return JSON only: {"topic":"short title","day":"Day 1|Continuing from X|etc","bo
       <div class="learn-topic">${l.topic}</div>
       <div class="learn-body">${l.body.split('\n').map(p => p ? `<p>${p}</p>` : '').join('')}</div>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
-        <div class="learn-tag" onclick="deepenLearn('${l.topic.replace(/'/g,"\\'")}', '${l.tag}')">${l.tag} — go deeper</div>
+        <div class="learn-tag" onclick="deepenLearn('${l.topic.replace(/'/g,"\\'")}', '${l.tag.replace(/'/g,"\\'")}')">${l.tag} — go deeper</div>
       </div>
     </div>`;
 
@@ -1750,7 +1750,7 @@ Return JSON: {"title":"...","type":"Wikipedia|YouTube|Documentary|Essay|Podcast"
     );
     const r = parseJSON(text);
     el.innerHTML = `
-      <div class="rabbit-hole" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(r.searchQuery)}','_blank')">
+      <div class="rabbit-hole" data-search="${r.searchQuery.replace(/"/g,'&quot;')}" onclick="window.open('https://www.google.com/search?q='+encodeURIComponent(this.dataset.search),'_blank')">
         <div class="rh-label">${r.type}</div>
         <div class="rh-text">${r.title}</div>
         <div class="rh-cta" style="margin-top:8px;font-size:12px;">${r.hook}</div>
