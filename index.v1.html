@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Your Page</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+  :root {
+    --ink: #0a0a0a;
+    --paper: #ffffff;
+    --mid: #555555;
+    --faint: #999999;
+    --border: #e0e0e0;
+    --border-strong: #0a0a0a;
+    --card-bg: #0a0a0a;
+    --card-fg: #ffffff;
+    --card-mid: rgba(255,255,255,0.55);
+    --card-faint: rgba(255,255,255,0.25);
+    --card-border: rgba(255,255,255,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; color-scheme: light; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* HEADER */
+  .masthead {
+    border-bottom: 1.5px solid var(--border-strong);
+    padding: 32px 40px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .masthead-left { display: flex; flex-direction: column; gap: 6px; }
+
+  .date-line {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .site-title {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .site-title span {
+    font-weight: 300;
+    color: var(--mid);
+  }
+
+  .masthead-right {
+    text-align: right;
+    font-size: 11px;
+    color: var(--faint);
+    line-height: 1.9;
+    font-weight: 400;
+  }
+
+  /* LAYOUT */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+  }
+
+  .col-main { border-right: 1px solid var(--border); padding-right: 48px; }
+  .col-side { padding-left: 40px; }
+
+  /* SECTIONS */
+  .section {
+    padding: 36px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* QUOTE */
+  .quote-block {
+    padding: 28px 0 24px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .quote-text {
+    font-size: 23px;
+    font-weight: 400;
+    line-height: 1.55;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+
+  .quote-source {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  /* DIGEST */
+  .digest-intro {
+    font-size: 13px;
+    color: var(--faint);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .news-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+
+  .news-source {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 7px;
+  }
+
+  .news-source a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .news-source a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  .news-headline {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 7px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .news-summary {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--mid);
+    font-weight: 400;
+  }
+
+  /* LEARN */
+  .learn-card {
+    background: var(--card-bg);
+    color: var(--card-fg);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .learn-card::before { display: none; }
+
+  .learn-day {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--card-mid);
+    margin-bottom: 14px;
+  }
+
+  .learn-topic {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    line-height: 1.25;
+    color: var(--card-fg);
+    letter-spacing: -0.02em;
+  }
+
+  .learn-body {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--card-mid);
+    font-weight: 400;
+  }
+
+  .learn-body p { margin-bottom: 10px; }
+  .learn-body p:last-child { margin-bottom: 0; }
+
+  .learn-tag {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--card-fg);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .learn-tag:hover { border-color: rgba(255,255,255,0.7); }
+
+  /* SIDEBAR */
+  .sidebar-section {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-section:last-child { border-bottom: none; }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 18px;
+  }
+
+  /* PULSE */
+  .pulse-item {
+    display: flex;
+    gap: 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.5;
+    cursor: default;
+  }
+
+  .pulse-item:last-child { border-bottom: none; }
+
+  .pulse-region {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    min-width: 52px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .pulse-text { color: var(--ink); font-weight: 400; }
+
+  /* RABBIT HOLE */
+  .rabbit-hole {
+    background: var(--ink);
+    color: var(--card-fg);
+    padding: 22px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .rabbit-hole:hover { opacity: 0.85; }
+
+  .rh-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--card-faint);
+    margin-bottom: 10px;
+  }
+
+  .rh-text {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .rh-cta {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--card-mid);
+    font-weight: 400;
+  }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--faint);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 20px 0;
+    font-weight: 400;
+  }
+
+  .loading-dots { display: flex; gap: 4px; }
+
+  .loading-dots span {
+    width: 4px; height: 4px;
+    background: var(--mid);
+    border-radius: 50%;
+    animation: pulse 1.2s infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* SETUP */
+  .setup-box {
+    background: var(--ink);
+    color: var(--card-fg);
+    padding: 32px;
+    margin: 32px 0;
+  }
+
+  .setup-box h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .setup-box p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--card-mid);
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  .setup-input {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    padding: 10px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .setup-input:focus { border-color: rgba(255,255,255,0.5); }
+
+  .btn {
+    background: #fff;
+    color: var(--ink);
+    border: none;
+    padding: 10px 22px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover { opacity: 0.8; }
+
+  /* REFRESH */
+  .refresh-bar {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px 0 0;
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+  }
+
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border-strong);
+    color: var(--ink);
+    padding: 8px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .refresh-btn:hover { background: var(--ink); color: var(--paper); }
+
+  /* INTERESTS */
+  .interests-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .interest-tag {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    color: var(--faint);
+    background: var(--paper);
+  }
+
+  .interest-tag.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .error-msg {
+    color: var(--mid);
+    font-size: 12px;
+    padding: 8px 0;
+    font-weight: 400;
+  }
+
+  /* MARKETS */
+  .market-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .market-item:last-child { border-bottom: none; }
+
+  .market-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .market-right { text-align: right; }
+
+  .market-price {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .market-chg {
+    font-size: 10px;
+    font-weight: 400;
+    margin-left: 6px;
+  }
+
+  .market-chg.up { color: #2a7a2a; }
+  .market-chg.down { color: #b53030; }
+
+  .market-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 6px 0;
+  }
+
+  .market-ts {
+    font-size: 9px;
+    color: var(--faint);
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  /* QUIZ */
+  .quiz-card {
+    margin-top: 16px;
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+  }
+
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .quiz-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--card-mid);
+  }
+
+  .quiz-topic-ref {
+    font-size: 10px;
+    color: var(--card-faint);
+    letter-spacing: 0.04em;
+  }
+
+  .quiz-body { padding: 20px 24px 24px; }
+
+  .quiz-question {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.55;
+    color: var(--card-fg);
+    margin-bottom: 18px;
+    letter-spacing: -0.01em;
+  }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+
+  .quiz-option {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--card-border);
+    color: var(--card-mid);
+    padding: 11px 14px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.4;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .quiz-option:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); }
+
+  .quiz-option.correct {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.6);
+    color: var(--card-fg);
+  }
+
+  .quiz-option.wrong {
+    background: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.08);
+    color: var(--card-faint);
+  }
+
+  .quiz-option.reveal-correct {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .option-letter {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--card-faint);
+    min-width: 16px;
+    padding-top: 1px;
+    letter-spacing: 0.05em;
+  }
+
+  .quiz-explanation {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.04);
+    border-left: 2px solid rgba(255,255,255,0.3);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--card-mid);
+    font-weight: 400;
+    display: none;
+  }
+
+  .quiz-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+    align-items: center;
+  }
+
+  .quiz-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    border: none;
+  }
+
+  .quiz-btn-skip {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--card-faint);
+  }
+
+  .quiz-btn-skip:hover { border-color: rgba(255,255,255,0.3); }
+
+  .quiz-btn-next {
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .quiz-btn-next:hover { opacity: 0.85; }
+
+  .quiz-score {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--card-faint);
+    margin-left: auto;
+  }
+
+  .quiz-loading {
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--card-faint);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    font-weight: 400;
+  }
+
+  /* BRAIN FOOD */
+  .brain-food-card {
+    background: #f5f5f0;
+    padding: 18px 20px;
+    border-left: 3px solid var(--ink);
+  }
+
+  .brain-food-text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+
+  .brain-food-attr {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: 10px;
+  }
+
+  /* EVENTS */
+  .event-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .event-item:last-child { border-bottom: none; }
+
+  .event-date {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 3px;
+  }
+
+  .event-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .event-desc { font-size: 12px; color: var(--mid); line-height: 1.5; }
+
+  /* WIKIPEDIA */
+  .wiki-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .wiki-extract {
+    font-size: 12px;
+    color: var(--mid);
+    line-height: 1.7;
+    margin-bottom: 10px;
+    display: none;
+  }
+
+  .wiki-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .wiki-toggle, .wiki-link {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    padding: 0;
+    text-decoration: none;
+  }
+
+  .wiki-toggle:hover, .wiki-link:hover { color: var(--ink); }
+
+  /* ── MOBILE ────────────────────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    body { padding: 0 0 48px; }
+
+    .masthead {
+      padding: 20px 16px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .masthead-right { text-align: left; font-size: 10px; line-height: 1.7; }
+
+    .site-title { font-size: 26px; }
+
+    .page {
+      padding: 0 16px;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .col-main { border-right: none; padding-right: 0; }
+    .col-side  { padding-left: 0; border-top: 1px solid var(--border); }
+
+    .section { padding: 24px 0; }
+
+    .quote-text { font-size: 17px; }
+
+    .learn-card { padding: 22px 16px; }
+
+    .learn-topic { font-size: 18px; }
+
+    .quiz-body { padding: 16px 16px 20px; }
+
+    .quiz-question { font-size: 14px; }
+
+    .quiz-option { font-size: 12px; padding: 10px 12px; }
+
+    .refresh-bar { gap: 8px; flex-wrap: wrap; }
+
+    .refresh-btn { flex: 1; min-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <div class="date-line" id="dateLine"></div>
+    <div class="site-title">Your <span>Morning</span> Brief</div>
+  </div>
+  <div class="masthead-right" id="streakInfo">
+    Loading your profile...
+  </div>
+</header>
+
+<div class="page" id="mainPage">
+  <!-- SETUP STATE shown first if no API key -->
+  <div class="col-main" id="mainCol">
+    <div id="setupSection" style="display:none">
+      <div class="setup-box">
+        <h3>One-time setup</h3>
+        <p>This page uses the Claude API to generate your personalised content. Enter your Anthropic API key below; it is stored only in your browser and never sent anywhere except api.anthropic.com.</p>
+        <p>Get a key at console.anthropic.com, then paste it here:</p>
+        <input type="password" class="setup-input" id="apiKeyInput" placeholder="sk-ant-...">
+        <br>
+        <button class="btn" onclick="saveKey()">Save &amp; Load</button>
+        <div class="error-msg" id="keyError"></div>
+      </div>
+    </div>
+
+    <div id="contentSection" style="display:none">
+      <!-- Quote -->
+      <div class="section">
+        <div class="section-label">Opening</div>
+        <div id="quoteArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> composing your opening...</div></div>
+      </div>
+
+      <!-- News digest -->
+      <div class="section">
+        <div class="section-label">News Digest</div>
+        <div id="digestArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> gathering the world...</div></div>
+      </div>
+
+      <!-- Canada News -->
+      <div class="section">
+        <div class="section-label">Canada</div>
+        <div id="canadaArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> scanning Canadian sources...</div></div>
+      </div>
+
+      <!-- Tech & AI -->
+      <div class="section">
+        <div class="section-label">Tech &amp; AI</div>
+        <div id="techAiArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> reading the wires...</div></div>
+      </div>
+
+      <!-- Learn -->
+      <div class="section">
+        <div class="section-label">Today's Learning</div>
+        <div id="learnArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> building on yesterday...</div></div>
+        <div id="quizArea" style="display:none"></div>
+      </div>
+
+      <div class="refresh-bar">
+        <button class="refresh-btn" onclick="refreshAll()">Refresh All</button>
+        <button class="refresh-btn" onclick="clearAndReset()">Reset Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-side" id="sideCol">
+    <div id="sideSetup" style="display:none">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Your Interests</div>
+        <p style="font-size:12px;color:var(--subtle);line-height:1.7;">Set up your API key first, then your interests will appear here.</p>
+      </div>
+    </div>
+    <div id="sideContent" style="display:none">
+      <!-- Markets -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Markets</div>
+        <div id="marketsArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Brain Food -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Brain Food</div>
+        <div id="brainFoodArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Pulse -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">World at a Glance</div>
+        <div id="pulseArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Toronto Events -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Toronto Events</div>
+        <div id="eventsArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Wikipedia Discovery -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Today's Discovery</div>
+        <div id="wikiArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- Interests -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Your Tilts</div>
+        <p style="font-size:11px;color:var(--subtle);line-height:1.6;margin-bottom:12px;">Click to weight what matters most. The page learns from these over time.</p>
+        <div class="interests-bar" id="interestTags"></div>
+      </div>
+
+      <!-- Rabbit Hole -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Today's Rabbit Hole</div>
+        <div id="rabbitArea"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const INTERESTS_DEFAULT = [
+  'geopolitics', 'science', 'history', 'philosophy',
+  'technology', 'economics', 'literature', 'environment'
+];
+
+function getState() {
+  return JSON.parse(localStorage.getItem('mypage_state') || JSON.stringify({
+    apiKey: '',
+    interests: INTERESTS_DEFAULT,
+    activeInterests: ['geopolitics', 'science', 'history'],
+    learnHistory: [],
+    visitCount: 0,
+    lastVisit: null
+  }));
+}
+
+function saveState(s) {
+  localStorage.setItem('mypage_state', JSON.stringify(s));
+}
+
+// ─── DAILY CACHE ──────────────────────────────────────────────────────────────
+const TODAY = new Date().toDateString();
+
+const CACHE_VER = 'v8'; // bump to bust stale cache across all devices
+
+function getCached(key) {
+  try {
+    const item = JSON.parse(localStorage.getItem(`ddc_${CACHE_VER}_${key}`));
+    return (item && item.date === TODAY) ? item.value : null;
+  } catch { return null; }
+}
+
+function setCache(key, value) {
+  localStorage.setItem(`ddc_${CACHE_VER}_${key}`, JSON.stringify({ date: TODAY, value }));
+}
+
+function parseJSON(text) {
+  const s = text.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/m, '').trim();
+  try { return JSON.parse(s); } catch {}
+  // Haiku sometimes adds preamble — extract the first JSON object or array
+  const m = s.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+  if (m) { try { return JSON.parse(m[1]); } catch {} }
+  throw new SyntaxError('No valid JSON in response');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Date
+  const now = new Date();
+  document.getElementById('dateLine').textContent =
+    now.toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const state = getState();
+  state.visitCount = (state.visitCount || 0) + 1;
+  state.lastVisit = now.toISOString();
+  saveState(state);
+
+  updateStreak(state);
+
+  if (!state.apiKey) {
+    document.getElementById('setupSection').style.display = 'block';
+    document.getElementById('sideSetup').style.display = 'block';
+  } else {
+    showContent(state);
+  }
+});
+
+function updateStreak(state) {
+  document.getElementById('streakInfo').innerHTML =
+    `Visit #${state.visitCount}<br>Interests: ${state.activeInterests.join(', ')}<br>Learning streak: ${state.learnHistory.length} topics`;
+}
+
+// ─── SETUP ────────────────────────────────────────────────────────────────────
+function saveKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    document.getElementById('keyError').textContent = 'Key should start with sk-ant-';
+    return;
+  }
+  const state = getState();
+  state.apiKey = key;
+  saveState(state);
+  document.getElementById('setupSection').style.display = 'none';
+  document.getElementById('sideSetup').style.display = 'none';
+  showContent(state);
+}
+
+// ─── SHOW CONTENT ─────────────────────────────────────────────────────────────
+function showContent(state) {
+  document.getElementById('contentSection').style.display = 'block';
+  document.getElementById('sideContent').style.display = 'block';
+  renderInterestTags(state);
+  loadAll(state);
+}
+
+// ─── INTERESTS ────────────────────────────────────────────────────────────────
+function renderInterestTags(state) {
+  const bar = document.getElementById('interestTags');
+  bar.innerHTML = '';
+  state.interests.forEach(tag => {
+    const el = document.createElement('div');
+    el.className = 'interest-tag' + (state.activeInterests.includes(tag) ? ' active' : '');
+    el.textContent = tag;
+    el.onclick = () => toggleInterest(tag);
+    bar.appendChild(el);
+  });
+}
+
+function toggleInterest(tag) {
+  const state = getState();
+  if (state.activeInterests.includes(tag)) {
+    if (state.activeInterests.length > 1) {
+      state.activeInterests = state.activeInterests.filter(t => t !== tag);
+    }
+  } else {
+    state.activeInterests.push(tag);
+  }
+  saveState(state);
+  renderInterestTags(state);
+}
+
+// ─── RSS FETCH ────────────────────────────────────────────────────────────────
+function parseXMLItems(xmlText, fallbackHost) {
+  try {
+    const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+    if (doc.querySelector('parsererror')) return [];
+    const feedTitle = doc.querySelector('channel > title')?.textContent?.trim() || fallbackHost;
+    return [...doc.querySelectorAll('item')].slice(0, 8).map(item => ({
+      title: item.querySelector('title')?.textContent?.trim() || '',
+      summary: (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
+      source: feedTitle,
+      link: item.querySelector('link')?.textContent?.trim() || item.querySelector('guid')?.textContent?.trim() || ''
+    })).filter(i => i.title);
+  } catch { return []; }
+}
+
+async function fetchRSS(url) {
+  const host = new URL(url).hostname;
+
+  // 1. corsproxy.io — no rate limit, returns raw XML
+  try {
+    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const text = await r.text();
+      const items = parseXMLItems(text, host);
+      if (items.length) return items;
+    }
+  } catch {}
+
+  // 2. allorigins — wraps in { contents }
+  try {
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const d = await r.json();
+      const items = parseXMLItems(d.contents || '', host);
+      if (items.length) return items;
+    }
+  } catch {}
+
+  // 3. rss2json — rate-limited but works when others fail
+  try {
+    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`, { signal: AbortSignal.timeout(6000) });
+    const d = await r.json();
+    if (d.status === 'ok' && d.items?.length) {
+      return d.items.map(i => ({
+        title: i.title,
+        summary: (i.description || i.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 200),
+        source: d.feed.title || host,
+        link: i.link || i.guid || ''
+      }));
+    }
+  } catch {}
+
+  return [];
+}
+
+// ─── RENDER NEWS ITEM ─────────────────────────────────────────────────────────
+function newsItemHTML(source, region, link, headline, summary, why, badge) {
+  const safeLink = /^https?:\/\//.test(link) ? link : '';
+  const srcHTML = safeLink
+    ? `<a href="${safeLink}" target="_blank" rel="noopener">${source}${region ? ' · ' + region : ''}${badge ? ' · ' + badge : ''} ↗</a>`
+    : `${source}${region ? ' · ' + region : ''}${badge ? ' · ' + badge : ''}`;
+  return `
+    <div class="news-item">
+      <div class="news-source">${srcHTML}</div>
+      <div class="news-headline">${headline}</div>
+      <div class="news-summary">${summary}${why ? ' <em>' + why + '</em>' : ''}</div>
+    </div>`;
+}
+
+// ─── API CALL ─────────────────────────────────────────────────────────────────
+async function claude(prompt, systemPrompt) {
+  const state = getState();
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1000,
+      system: systemPrompt || 'You are a concise, erudite assistant. Respond only with the requested content, no preamble.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+// ─── MARKETS ──────────────────────────────────────────────────────────────────
+const MARKET_SYMBOLS = [
+  { sym: '^GSPC',    label: 'S&P 500',  group: 'index' },
+  { sym: '^GSPTSE',  label: 'TSX',      group: 'index' },
+  { sym: '^FTSE',    label: 'FTSE 100', group: 'index' },
+  { sym: '^J203.JO', label: 'JSE',      group: 'index' },
+  { sym: 'USDCAD=X', label: 'USD/CAD',  group: 'fx' },
+  { sym: 'USDZAR=X', label: 'USD/ZAR',  group: 'fx' },
+  { sym: 'GC=F',     label: 'Gold',     group: 'commodity' },
+  { sym: 'SI=F',     label: 'Silver',   group: 'commodity' },
+  { sym: 'PL=F',     label: 'Platinum', group: 'commodity' },
+  { sym: 'CL=F',     label: 'WTI Oil',  group: 'commodity' },
+  { sym: 'HG=F',     label: 'Copper',   group: 'commodity' },
+];
+
+async function loadMarkets() {
+  const el = document.getElementById('marketsArea');
+  try {
+    const syms = MARKET_SYMBOLS.map(s => s.sym).join(',');
+    // v8 on query2 avoids the crumb-token requirement that broke v7/query1 (~2023)
+    const yahooUrl = `https://query2.finance.yahoo.com/v8/finance/quote?symbols=${syms}&formatted=false&lang=en-US&region=US`;
+
+    let quotes;
+    // 1. corsproxy.io — returns raw JSON
+    try {
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, { signal: AbortSignal.timeout(7000) });
+      if (r.ok) { const d = await r.json(); quotes = d.quoteResponse?.result || []; }
+    } catch {}
+    // 2. allorigins — wraps in { contents }
+    if (!quotes?.length) {
+      try {
+        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, { signal: AbortSignal.timeout(7000) });
+        if (r.ok) { const d = await r.json(); quotes = JSON.parse(d.contents || 'null')?.quoteResponse?.result || []; }
+      } catch {}
+    }
+    // 3. codetabs proxy
+    if (!quotes?.length) {
+      try {
+        const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, { signal: AbortSignal.timeout(7000) });
+        if (r.ok) { const d = await r.json(); quotes = d.quoteResponse?.result || []; }
+      } catch {}
+    }
+    if (!quotes?.length) throw new Error('No data');
+    const qMap = {};
+    quotes.forEach(q => qMap[q.symbol] = q);
+
+    let lastGroup = null;
+    let html = '';
+    MARKET_SYMBOLS.forEach(s => {
+      const q = qMap[s.sym];
+      if (!q) return;
+      if (lastGroup && s.group !== lastGroup) html += '<hr class="market-divider">';
+      lastGroup = s.group;
+
+      const price = q.regularMarketPrice;
+      const chg = q.regularMarketChangePercent ?? 0;
+      const up = chg >= 0;
+      const priceStr = s.group === 'fx'
+        ? price.toFixed(4)
+        : price >= 1000 ? price.toLocaleString('en', { maximumFractionDigits: 0 }) : price.toFixed(2);
+
+      html += `
+        <div class="market-item">
+          <div class="market-label">${s.label}</div>
+          <div class="market-right">
+            <span class="market-price">${priceStr}</span>
+            <span class="market-chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%</span>
+          </div>
+        </div>`;
+    });
+
+    const ts = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    html += `<div class="market-ts">Updated ${ts}</div>`;
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Markets unavailable</div>`;
+  }
+}
+
+// ─── BRAIN FOOD ───────────────────────────────────────────────────────────────
+async function loadBrainFood(state, force) {
+  const el = document.getElementById('brainFoodArea');
+  const cached = getCached('brainFood');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    const interests = state.activeInterests.join(', ');
+    const text = await claude(
+      `Write a "Brain Food" reflection in the style of Shane Parrish's Farnam Street newsletter. Pick one of: a mental model, a thinking tool, or a sharp observation about human behaviour or decision-making. Tie it loosely to one of these interests: ${interests}. 2–3 sentences, no fluff, no inspirational clichés. End with one short sentence that lands.
+
+Return JSON only: {"reflection":"...","concept":"the mental model or concept name"}`,
+      'Return only valid JSON, no markdown fences.'
+    );
+    const b = parseJSON(text);
+    el.innerHTML = `
+      <div class="brain-food-card">
+        <div class="brain-food-text">${b.reflection}</div>
+        <div class="brain-food-attr">${b.concept}</div>
+      </div>`;
+    setCache('brainFood', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── TORONTO EVENTS ───────────────────────────────────────────────────────────
+async function loadTorontoEvents(force) {
+  const el = document.getElementById('eventsArea');
+  const cached = getCached('torontoEvents');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    // Try Luma public discover API
+    let events = [];
+    try {
+      const lumaUrl = 'https://api.lu.ma/public/v1/discover/get-discover-events?geo_city=Toronto&pagination_limit=8';
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(lumaUrl)}`);
+      const d = await r.json();
+      events = (d.entries || []).slice(0, 5).map(e => ({
+        name: e.event?.name || '',
+        date: e.event?.start_at ? new Date(e.event.start_at).toLocaleDateString('en-CA', { month:'short', day:'numeric' }) : '',
+        desc: (e.event?.description || '').replace(/<[^>]*>/g, '').slice(0, 100)
+      })).filter(e => e.name);
+    } catch {}
+
+    if (events.length > 0) {
+      el.innerHTML = events.map(e => `
+        <div class="event-item">
+          <div class="event-date">${e.date}</div>
+          <div class="event-name">${e.name}</div>
+          ${e.desc ? `<div class="event-desc">${e.desc}</div>` : ''}
+        </div>`).join('') + `<div class="market-ts">Via Luma · Toronto</div>`;
+    } else {
+      // Claude fallback
+      const text = await claude(
+        `Today is ${new Date().toDateString()}. Generate 3 plausible upcoming Toronto AI/tech/innovation events for the next 2–3 weeks. Think Trajectory Labs, Communitech, MaRS, university AI labs, startup meetups.\n\nReturn JSON: [{"name":"...","date":"Mon DD","desc":"one sentence"}]`,
+        'Return only valid JSON array, no markdown fences.'
+      );
+      const evs = parseJSON(text);
+      el.innerHTML = evs.map(e => `
+        <div class="event-item">
+          <div class="event-date">${e.date}</div>
+          <div class="event-name">${e.name}</div>
+          <div class="event-desc">${e.desc}</div>
+        </div>`).join('') + `<div class="market-ts">AI-generated · check Luma for live listings</div>`;
+    }
+    setCache('torontoEvents', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load events</div>`;
+  }
+}
+
+// ─── WIKIPEDIA ────────────────────────────────────────────────────────────────
+async function loadWikipedia() {
+  const el = document.getElementById('wikiArea');
+  // Not cached — random every day is fine, Wikipedia API is free
+  try {
+    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary');
+    const d = await r.json();
+    const title = d.title || '';
+    const extract = (d.extract || '').slice(0, 400);
+    const url = d.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+    el.innerHTML = `
+      <div class="wiki-title">${title}</div>
+      <div class="wiki-extract" id="wikiExtract">${extract}</div>
+      <div class="wiki-footer">
+        <button class="wiki-toggle" onclick="toggleWiki()">Read extract ▾</button>
+        <a class="wiki-link" href="${url}" target="_blank" rel="noopener">Wikipedia →</a>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load</div>`;
+  }
+}
+
+function toggleWiki() {
+  const ext = document.getElementById('wikiExtract');
+  const btn = document.querySelector('.wiki-toggle');
+  if (!ext || !btn) return;
+  const show = ext.style.display === 'none' || ext.style.display === '';
+  ext.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? 'Hide ▴' : 'Read extract ▾';
+}
+
+// ─── LOAD ALL ─────────────────────────────────────────────────────────────────
+function loadAll(state, force) {
+  loadMarkets();
+  loadQuote(state, force);
+  loadBrainFood(state, force);
+  loadDigest(state, force);
+  loadCanadaNews(state, force);
+  loadTechAI(state, force);
+  loadLearn(state, force);
+  loadPulse(state, force);
+  loadTorontoEvents(force);
+  loadWikipedia();
+  loadRabbitHole(state, force);
+}
+
+// ─── QUOTE ────────────────────────────────────────────────────────────────────
+async function loadQuote(state, force) {
+  const el = document.getElementById('quoteArea');
+  const cached = getCached('quote');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    const interests = state.activeInterests.join(', ');
+    const text = await claude(
+      `Generate one opening for the day. Rotate across these types: a line or two from a poem (not Rumi — be unexpected), a Quranic verse with brief context, or a sharp non-insipid quote from a thinker, writer, or historical figure. The user's interests are: ${interests}. Today's date: ${new Date().toDateString()}.
+
+Return JSON only: {"type":"poem|quran|quote","text":"...","source":"...","context":"one sentence of context"}`,
+      'Return only valid JSON, no markdown fences.'
+    );
+    const q = parseJSON(text);
+    el.innerHTML = `
+      <div class="quote-block">
+        <div class="quote-text">${q.text}</div>
+        <div class="quote-source">${q.source} ${q.context ? '· ' + q.context : ''}</div>
+      </div>`;
+    setCache('quote', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load opening: ${e.message}</div>`;
+  }
+}
+
+// ─── DIGEST ───────────────────────────────────────────────────────────────────
+async function loadDigest(state, force) {
+  const el = document.getElementById('digestArea');
+  const cached = getCached('digest');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> fetching live news...</div>`;
+  try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://rss.cbc.ca/lineup/toronto.xml'),
+      fetchRSS('https://rss.cbc.ca/lineup/canada.xml'),
+      fetchRSS('https://rss.cbc.ca/lineup/world.xml'),
+      fetchRSS('https://rss.cbc.ca/lineup/business.xml'),
+      fetchRSS('https://www.cp24.com/rss/latest/'),
+      fetchRSS('https://nationalpost.com/feed'),
+      fetchRSS('https://www.blogto.com/rss.xml'),
+      fetchRSS('https://www.theglobeandmail.com/arc/outboundfeeds/rss/'),
+      fetchRSS('https://feeds.news24.com/articles/news24/TopStories/rss'),
+      fetchRSS('https://www.dailymaverick.co.za/feed/'),
+    ]);
+    const pool = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    if (pool.length === 0) {
+      el.innerHTML = `<div class="error-msg">Could not reach news feeds. <button onclick="refreshAll()" style="background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;font-size:11px;margin-left:8px;">Retry</button></div>`;
+      return;
+    }
+
+    const interests = state.activeInterests.join(', ');
+    const feedItems = pool.slice(0, 30);
+    const feedText = feedItems.map((i, idx) => `[${idx}] [${i.source}] ${i.title}. ${i.summary}`).join('\n');
+
+    const text = await claude(
+      `These are live RSS headlines:\n${feedText}\n\nReader: Toronto, Canada, ties to South Africa. Interests: ${interests}.\n\nSelect 5 by index. Mix: 2 Canada/Toronto, 1 South Africa, 2 global. Write a 2-sentence synthesis for each based ONLY on the text above — do not add facts from training data. Add one "why it matters" sentence. Return the exact idx number.\n\nReturn JSON array: [{"idx":0,"synthesis":"...","why":"...","region":"Toronto|Canada|SouthAfrica|Global"}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const selections = parseJSON(text);
+    const newsItems = selections.map(s => {
+      const o = feedItems[s.idx] || {};
+      return { source: o.source || '', link: o.link || '', headline: o.title || '', synthesis: s.synthesis, why: s.why, region: s.region };
+    }).filter(i => i.headline);
+
+    el.innerHTML = `
+      <div class="digest-intro">Live feeds · ${pool.length} articles scanned</div>
+      ${newsItems.map(i => newsItemHTML(i.source, i.region, i.link, i.headline, i.synthesis, i.why)).join('')}`;
+    setCache('digest', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load digest: ${e.message}</div>`;
+  }
+}
+
+// ─── CANADA NEWS ──────────────────────────────────────────────────────────────
+async function loadCanadaNews(state, force) {
+  const el = document.getElementById('canadaArea');
+  const cached = getCached('canada');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> scanning Canadian sources...</div>`;
+  try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://www.thestar.com/content/thestar/feed.rss'),
+      fetchRSS('https://www.theglobeandmail.com/arc/outboundfeeds/rss/'),
+      fetchRSS('https://macleans.ca/feed/'),
+      fetchRSS('https://ipolitics.ca/feed/'),
+    ]);
+    const pool = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    if (pool.length === 0) {
+      el.innerHTML = `<div class="error-msg">Could not reach Canadian feeds. <button onclick="refreshAll()" style="background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;font-size:11px;margin-left:8px;">Retry</button></div>`;
+      return;
+    }
+
+    const interests = state.activeInterests.join(', ');
+    const feedItems = pool.slice(0, 20);
+    const feedText = feedItems.map((i, idx) => `[${idx}] [${i.source}] ${i.title}. ${i.summary}`).join('\n');
+
+    const text = await claude(
+      `Live Canadian headlines:\n${feedText}\n\nReader in Toronto. Interests: ${interests}.\n\nSelect 3 by index from the list above. Mix: 1 national Canada, 1 Toronto-specific, 1 business/politics. Write a 1-sentence synthesis per item based ONLY on the text above. Add "why it matters." Also generate 1 FT-style financial/geopolitical item relevant to Canada (label source "FT Style", idx:-1, link:"").\n\nReturn JSON: [{"idx":0,"synthesis":"...","why":"..."},{"idx":-1,"source":"FT Style","headline":"...","synthesis":"...","why":"...","link":""}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const selections = parseJSON(text);
+    const newsItems = selections.map(s => {
+      if (s.idx === -1) return { source: s.source || 'FT Style', link: '', headline: s.headline || '', synthesis: s.synthesis, why: s.why };
+      const o = feedItems[s.idx] || {};
+      return { source: o.source || '', link: o.link || '', headline: o.title || '', synthesis: s.synthesis, why: s.why };
+    }).filter(i => i.headline);
+
+    el.innerHTML = `
+      <div class="digest-intro">Star · Globe · Maclean's · iPolitics · ${pool.length} articles</div>
+      ${newsItems.map(i => newsItemHTML(i.source, null, i.link, i.headline, i.synthesis, i.why, i.link ? null : 'AI-generated')).join('')}`;
+    setCache('canada', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── TECH & AI ────────────────────────────────────────────────────────────────
+async function loadTechAI(state, force) {
+  const el = document.getElementById('techAiArea');
+  const cached = getCached('techAi');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> reading the wires...</div>`;
+  try {
+    const feeds = await Promise.allSettled([
+      fetchRSS('https://www.deeplearning.ai/feed/'),
+      fetchRSS('https://turingpost.substack.com/feed/'),
+    ]);
+    const pool = feeds.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    if (pool.length === 0) {
+      el.innerHTML = `<div class="error-msg">Could not reach tech feeds. <button onclick="refreshAll()" style="background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;font-size:11px;margin-left:8px;">Retry</button></div>`;
+      return;
+    }
+
+    const feedItems = pool.slice(0, 16);
+    const feedText = feedItems.map((i, idx) => `[${idx}] [${i.source}] ${i.title}. ${i.summary}`).join('\n');
+
+    const text = await claude(
+      `Live AI/ML headlines:\n${feedText}\n\nSelect 3 by index. Aim for variety across: research, practical application, industry news. For each, write a 2-sentence synthesis based ONLY on the text above — no training data. Label each with its actual source name.\n\nReturn JSON: [{"idx":0,"synthesis":"..."}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const selections = parseJSON(text);
+    const techItems = selections.map(s => {
+      const o = feedItems[s.idx] || {};
+      return { source: o.source || '', link: o.link || '', headline: o.title || '', synthesis: s.synthesis };
+    }).filter(i => i.headline);
+
+    el.innerHTML = `
+      <div class="digest-intro">The Batch · Turing Post · ${pool.length} articles scanned</div>
+      ${techItems.map(i => newsItemHTML(i.source, null, i.link, i.headline, i.synthesis, null)).join('')}`;
+    setCache('techAi', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── LEARN ────────────────────────────────────────────────────────────────────
+async function loadLearn(state, force) {
+  const el = document.getElementById('learnArea');
+  let l = getCached('learn');
+
+  if (!l || force) {
+    el.innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div> building on yesterday...</div>`;
+    try {
+      const history = state.learnHistory.slice(-5);
+      const interests = state.activeInterests.join(', ');
+      const historyStr = history.length
+        ? `Previous topics: ${history.map(h => h.topic || h).join(', ')}. Build on one of these or open a related new thread.`
+        : `No previous topics. Start something foundational in one of: ${interests}.`;
+
+      const text = await claude(
+        `You are building a daily learning scaffold for someone interested in: ${interests}. ${historyStr}
+
+Today, teach something genuinely interesting: a concept, historical event, scientific idea, philosophical tension, or cultural thread. Keep it under 200 words but make it feel complete. End with one question to sit with, or one thing to notice in the world today that connects to this.
+
+Return JSON only: {"topic":"short title","day":"Day 1|Continuing from X|etc","body":"...","tag":"the field this belongs to"}`,
+        'Return only valid JSON, no markdown fences.'
+      );
+      l = parseJSON(text);
+
+      const newState = getState();
+      const entry = { topic: l.topic, tag: l.tag, body: l.body.slice(0, 400) };
+      newState.learnHistory = [...(newState.learnHistory || []).map(h => typeof h === 'string' ? { topic: h, tag: '', body: '' } : h), entry].slice(-30);
+      saveState(newState);
+      updateStreak(newState);
+      setCache('learn', l);
+    } catch(e) {
+      el.innerHTML = `<div class="error-msg">Could not load learning: ${e.message}</div>`;
+      return;
+    }
+  }
+
+  el.innerHTML = `
+    <div class="learn-card">
+      <div class="learn-day">${l.day}</div>
+      <div class="learn-topic">${l.topic}</div>
+      <div class="learn-body">${l.body.split('\n').map(p => p ? `<p>${p}</p>` : '').join('')}</div>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+        <div class="learn-tag" onclick="deepenLearn('${l.topic.replace(/'/g,"\\'")}', '${l.tag.replace(/'/g,"\\'")}')">${l.tag} — go deeper</div>
+      </div>
+    </div>`;
+
+  const currentState = getState();
+  const quizHistory = currentState.learnHistory.slice(0, -1);
+  const quizPool = quizHistory.length >= 1 ? quizHistory : [{ topic: l.topic, tag: l.tag, body: l.body.slice(0, 400) }];
+  loadQuiz(quizPool, force);
+}
+
+async function deepenLearn(topic, tag) {
+  const el = document.getElementById('learnArea');
+  const existing = el.innerHTML;
+  el.innerHTML += `<div class="loading" style="margin-top:20px"><div class="loading-dots"><span></span><span></span><span></span></div> going deeper on ${topic}...</div>`;
+  try {
+    const text = await claude(
+      `Expand on the topic "${topic}" in 150 words. Go one level deeper than an introduction: add a surprising angle, a historical figure's perspective, or a counterintuitive finding. End with one further question.`,
+    );
+    el.innerHTML = existing + `<div class="section" style="padding-top:20px"><div class="news-summary" style="font-size:14px;line-height:1.8;">${text}</div></div>`;
+  } catch(e) {
+    el.innerHTML = existing;
+  }
+}
+
+// ─── QUIZ ENGINE ──────────────────────────────────────────────────────────────
+let quizState = { questions: [], current: 0, score: 0, answered: 0 };
+
+async function loadQuiz(history, force) {
+  const qEl = document.getElementById('quizArea');
+  const cached = getCached('quiz');
+  if (cached && !force) {
+    qEl.style.display = 'block';
+    quizState = { questions: cached, current: 0, score: 0, answered: 0 };
+    renderQuizQuestion();
+    return;
+  }
+
+  qEl.style.display = 'block';
+  qEl.innerHTML = `
+    <div class="learn-card" style="margin-top:16px;">
+      <div class="quiz-loading">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        generating a question from your history...
+      </div>
+    </div>`;
+
+  try {
+    // Shuffle history so quiz doesn't always fixate on the most recent topic
+    const shuffled = [...history].sort(() => Math.random() - 0.5);
+    const pool = shuffled.slice(0, 6);
+    const topicsForPrompt = pool.map(h => `- "${h.topic}" (${h.tag || 'general'})${h.body ? ': ' + h.body.slice(0, 120) : ''}`).join('\n');
+
+    const text = await claude(
+      `The user has studied these topics:\n${topicsForPrompt}\n\nGenerate 3 multiple-choice quiz questions — ONE question per different topic (never two questions on the same topic). Spread across different subjects and fields. Questions should test genuine understanding, not just recall — prefer applying or connecting knowledge.\n\nEach question: exactly 4 options (A–D), one correct, brief 2-sentence explanation.\n\nReturn JSON array only:\n[{\n  "topic": "which topic this tests",\n  "question": "...",\n  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],\n  "correct": 0,\n  "explanation": "..."\n}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+
+    const questions = parseJSON(text);
+    setCache('quiz', questions);
+    quizState = { questions, current: 0, score: 0, answered: 0 };
+    renderQuizQuestion();
+  } catch(e) {
+    qEl.style.display = 'none';
+  }
+}
+
+function renderQuizQuestion() {
+  const qEl = document.getElementById('quizArea');
+  const { questions, current, score, answered } = quizState;
+
+  if (current >= questions.length) {
+    // All done
+    const pct = answered > 0 ? Math.round((score / answered) * 100) : 0;
+    qEl.innerHTML = `
+      <div class="learn-card" style="margin-top:16px;">
+        <div class="quiz-header">
+          <div class="quiz-label">Recall Check — Complete</div>
+        </div>
+        <div class="quiz-body">
+          <div class="quiz-question" style="font-style:normal;font-size:15px;">
+            ${answered === 0 ? 'Questions skipped — come back tomorrow.' :
+              `${score} of ${answered} correct (${pct}%) — ${pct >= 80 ? 'Solid retention.' : pct >= 50 ? 'Getting there.' : 'Worth revisiting these topics.'}`}
+          </div>
+        </div>
+      </div>`;
+
+    // Save score to state
+    const state = getState();
+    state.quizScores = [...(state.quizScores || []), { date: new Date().toDateString(), score, answered }].slice(-30);
+    saveState(state);
+    return;
+  }
+
+  const q = questions[current];
+  const letters = ['A', 'B', 'C', 'D'];
+
+  qEl.innerHTML = `
+    <div class="learn-card" style="margin-top:16px;">
+      <div class="quiz-header">
+        <div class="quiz-label">Recall Check · ${current + 1} of ${questions.length}</div>
+        <div class="quiz-topic-ref">${q.topic}</div>
+      </div>
+      <div class="quiz-body">
+        <div class="quiz-question">${q.question}</div>
+        <div class="quiz-options" id="quizOptions">
+          ${q.options.map((opt, i) => `
+            <button class="quiz-option" onclick="answerQuiz(${i})">
+              <span class="option-letter">${letters[i]}.</span>
+              <span>${opt.replace(/^[A-D]\.\s*/,'')}</span>
+            </button>`).join('')}
+        </div>
+        <div class="quiz-explanation" id="quizExplanation">${q.explanation}</div>
+        <div class="quiz-footer">
+          <button class="quiz-btn quiz-btn-skip" onclick="skipQuiz()">Skip question</button>
+          <div class="quiz-score" id="quizScore">${quizState.answered > 0 ? `${quizState.score}/${quizState.answered}` : ''}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function answerQuiz(chosenIndex) {
+  const q = quizState.questions[quizState.current];
+  const correct = q.correct;
+  const isCorrect = chosenIndex === correct;
+
+  if (isCorrect) quizState.score++;
+  quizState.answered++;
+
+  // Style options
+  const options = document.querySelectorAll('.quiz-option');
+  options.forEach((btn, i) => {
+    btn.onclick = null; // disable further clicks
+    if (i === correct) btn.classList.add('correct');
+    else if (i === chosenIndex && !isCorrect) btn.classList.add('wrong');
+    else if (i !== chosenIndex) btn.classList.add('reveal-correct');
+  });
+
+  // Show explanation
+  const expEl = document.getElementById('quizExplanation');
+  if (expEl) expEl.style.display = 'block';
+
+  // Update footer: replace skip with Next
+  const footer = document.querySelector('.quiz-footer');
+  if (footer) {
+    footer.innerHTML = `
+      <button class="quiz-btn quiz-btn-next" onclick="nextQuiz()">
+        ${quizState.current + 1 < quizState.questions.length ? 'Next question →' : 'Finish'}
+      </button>
+      <div class="quiz-score">${quizState.score}/${quizState.answered}</div>`;
+  }
+}
+
+function skipQuiz() {
+  quizState.current++;
+  renderQuizQuestion();
+}
+
+function nextQuiz() {
+  quizState.current++;
+  renderQuizQuestion();
+}
+
+// ─── PULSE ────────────────────────────────────────────────────────────────────
+async function loadPulse(state, force) {
+  const el = document.getElementById('pulseArea');
+  // Always refresh — no daily cache — so it reflects today's real news
+  try {
+    // Fetch 3 global RSS feeds for live context
+    const [worldItems, news24Items, bbcItems] = await Promise.all([
+      fetchRSS('https://rss.cbc.ca/lineup/world.xml'),
+      fetchRSS('https://feeds.news24.com/articles/news24/TopStories/rss'),
+      fetchRSS('https://feeds.bbci.co.uk/news/world/rss.xml'),
+    ]);
+    const allItems = [...worldItems, ...news24Items, ...bbcItems];
+    let contextBlock = '';
+    if (allItems.length > 0) {
+      const headlineLines = allItems.slice(0, 18)
+        .map((i, idx) => `[${idx}] ${i.source}: ${i.title}`)
+        .join('\n');
+      contextBlock = `\n\nHere are today's live headlines to ground your analysis:\n${headlineLines}`;
+    }
+
+    const text = await claude(
+      `Today is ${new Date().toDateString()}. You are a seasoned foreign correspondent. Using the headlines below as your primary source, give 6 one-line situational updates — one per region (Africa, Middle East, Europe, Asia, Americas, Global/Climate). Each is a crisp single sentence summarising the most significant current tension or development in that region. Prioritise what the headlines tell you; fill gaps with your knowledge.${contextBlock}
+
+Return JSON array only: [{"region":"Africa|Middle East|Europe|Asia|Americas|Global","text":"..."}]`,
+      'Return only valid JSON array, no markdown fences.'
+    );
+    const items = parseJSON(text);
+    const sourceCount = allItems.length;
+    const ts = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    el.innerHTML = items.map(i => `
+      <div class="pulse-item">
+        <div class="pulse-region">${i.region}</div>
+        <div class="pulse-text">${i.text}</div>
+      </div>`).join('') +
+      `<div class="market-ts">Claude synthesis · ${sourceCount} live headlines · updated ${ts}</div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── RABBIT HOLE ─────────────────────────────────────────────────────────────
+async function loadRabbitHole(state, force) {
+  const el = document.getElementById('rabbitArea');
+  const cached = getCached('rabbitHole');
+  if (cached && !force) { el.innerHTML = cached; return; }
+  try {
+    const interests = state.activeInterests.join(', ');
+    const text = await claude(
+      `Suggest one genuinely fascinating thing to explore today — a YouTube video type, a Wikipedia article, a documentary, a podcast episode concept, or a short essay — related to the user's interests: ${interests}. Make it specific and compelling. Not generic.
+
+Return JSON: {"title":"...","type":"Wikipedia|YouTube|Documentary|Essay|Podcast","hook":"one irresistible sentence about why this is worth 10 minutes","searchQuery":"what to type into Google/YouTube"}`,
+      'Return only valid JSON, no markdown fences.'
+    );
+    const r = parseJSON(text);
+    el.innerHTML = `
+      <div class="rabbit-hole" data-search="${r.searchQuery.replace(/"/g,'&quot;')}" onclick="window.open('https://www.google.com/search?q='+encodeURIComponent(this.dataset.search),'_blank')">
+        <div class="rh-label">${r.type}</div>
+        <div class="rh-text">${r.title}</div>
+        <div class="rh-cta" style="margin-top:8px;font-size:12px;">${r.hook}</div>
+        <div class="rh-cta">Click to search →</div>
+      </div>`;
+    setCache('rabbitHole', el.innerHTML);
+  } catch(e) {
+    el.innerHTML = `<div class="error-msg">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ─── REFRESH / RESET ──────────────────────────────────────────────────────────
+function refreshAll() {
+  const state = getState();
+  ['quoteArea','digestArea','canadaArea','techAiArea','learnArea','pulseArea','brainFoodArea','eventsArea','wikiArea','rabbitArea','marketsArea'].forEach(id => {
+    document.getElementById(id).innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  });
+  const qEl = document.getElementById('quizArea');
+  if (qEl) { qEl.style.display = 'none'; qEl.innerHTML = ''; }
+  quizState = { questions: [], current: 0, score: 0, answered: 0 };
+  loadAll(state, true);
+}
+
+function clearAndReset() {
+  if (confirm('Reset all preferences and learning history? Your API key will be kept.')) {
+    const state = getState();
+    const key = state.apiKey;
+    localStorage.removeItem('mypage_state');
+    const fresh = getState();
+    fresh.apiKey = key;
+    saveState(fresh);
+    location.reload();
+  }
+}
+</script>
+
+</body>
+</html>
